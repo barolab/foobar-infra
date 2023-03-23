@@ -29,7 +29,7 @@ resource "kubernetes_namespace" "flux" {
 
 # Generate the K8S secret containing the key
 resource "kubernetes_secret" "flux" {
-  depends_on = [tls_private_key.flux]
+  depends_on = [kubernetes_namespace.flux, tls_private_key.flux]
 
   metadata {
     name      = "flux-ssh"
@@ -52,7 +52,7 @@ resource "kubernetes_secret" "flux" {
 
 # Deploy Flux controllers using the community Helm Chart
 resource "helm_release" "flux" {
-  depends_on = [kubernetes_secret.flux]
+  depends_on = [kubernetes_namespace.flux, kubernetes_secret.flux]
 
   name       = "flux"
   namespace  = var.namespace
@@ -85,7 +85,7 @@ resource "helm_release" "flux" {
 
 # Create the Flux GitRepository resources
 resource "kubectl_manifest" "git_repo" {
-  depends_on = [helm_release.flux]
+  depends_on = [kubernetes_namespace.flux, helm_release.flux]
   for_each   = var.repositories
 
   yaml_body = templatefile(
@@ -122,7 +122,7 @@ locals {
 
 # Create the Flux Kustomization resources
 resource "kubectl_manifest" "flux_kustomizations" {
-  depends_on = [helm_release.flux]
+  depends_on = [kubernetes_namespace.flux, helm_release.flux]
 
   # local.kustomizations is a list, so we must now project it into a map where each key is unique. We'll combine the git_repository and kustomizations keys to produce a single unique key per instance.
   for_each = {
