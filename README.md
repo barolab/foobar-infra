@@ -23,5 +23,4 @@ Targets:
 ## Read More
 
 If you want to dive into the code and start playing with the repository, check the [setup documentation](./docs/setup.md) and start playing around!
-
 If you're interested about the architecture, the reasoning and the choices made here, check the [challenge documentation](./docs/challenge.md)
