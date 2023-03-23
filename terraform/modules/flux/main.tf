@@ -62,23 +62,23 @@ resource "helm_release" "flux" {
 
   values = [
     templatefile("${path.module}/templates/values.tftpl", {
-      source_controller_create = var.controllers.source.create
-      source_controller_cpu_requests = var.controllers.source.resources.requests.cpu
-      source_controller_cpu_limits = var.controllers.source.resources.limits.cpu
+      source_controller_create          = var.controllers.source.create
+      source_controller_cpu_requests    = var.controllers.source.resources.requests.cpu
+      source_controller_cpu_limits      = var.controllers.source.resources.limits.cpu
       source_controller_memory_requests = var.controllers.source.resources.requests.memory
-      source_controller_memory_limits = var.controllers.source.resources.limits.memory
+      source_controller_memory_limits   = var.controllers.source.resources.limits.memory
 
-      kustomize_controller_create = var.controllers.kustomize.create
-      kustomize_controller_cpu_requests = var.controllers.kustomize.resources.requests.cpu
-      kustomize_controller_cpu_limits = var.controllers.kustomize.resources.limits.cpu
+      kustomize_controller_create          = var.controllers.kustomize.create
+      kustomize_controller_cpu_requests    = var.controllers.kustomize.resources.requests.cpu
+      kustomize_controller_cpu_limits      = var.controllers.kustomize.resources.limits.cpu
       kustomize_controller_memory_requests = var.controllers.kustomize.resources.requests.memory
-      kustomize_controller_memory_limits = var.controllers.kustomize.resources.limits.memory
+      kustomize_controller_memory_limits   = var.controllers.kustomize.resources.limits.memory
 
-      helm_controller_create = var.controllers.helm.create
-      helm_controller_cpu_requests = var.controllers.helm.resources.requests.cpu
-      helm_controller_cpu_limits = var.controllers.helm.resources.limits.cpu
+      helm_controller_create          = var.controllers.helm.create
+      helm_controller_cpu_requests    = var.controllers.helm.resources.requests.cpu
+      helm_controller_cpu_limits      = var.controllers.helm.resources.limits.cpu
       helm_controller_memory_requests = var.controllers.helm.resources.requests.memory
-      helm_controller_memory_limits = var.controllers.helm.resources.limits.memory
+      helm_controller_memory_limits   = var.controllers.helm.resources.limits.memory
     })
   ]
 }
@@ -132,7 +132,7 @@ resource "kubectl_manifest" "flux_kustomizations" {
   yaml_body = templatefile(
     "${path.module}/templates/kustomization.tftpl",
     {
-      name = "${each.value.repository}-${each.value.name}"
+      name      = "${each.value.repository}-${each.value.name}"
       namespace = var.namespace
 
       path       = each.value.path
