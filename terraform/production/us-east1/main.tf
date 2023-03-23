@@ -10,7 +10,7 @@ module "network" {
   subnets = [
     {
       subnet_name   = "${local.cluster.name}-subnet"
-      subnet_ip     = "10.10.0.0/16"
+      subnet_ip     = "10.10.0.0/20"
       subnet_region = local.region
     },
   ]
