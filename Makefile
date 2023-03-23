@@ -31,15 +31,22 @@ tf-destroy:
 	@terraform -chdir=terraform/production/eu-west9/ apply
 	@terraform -chdir=terraform/production/us-east1/ apply
 
-## Destroy only the terraform resources that costs $$$
+## Destroy Flux resources and the GKE clusters
 tf-teardown:
+	export KUBECONFIG=~/.kube/foobar-eu
+	@kubectl -n flux-system delete gitrepository --all
+	@kubectl -n flux-system delete kustomization --all
 	@terraform -chdir=terraform/production/eu-west9/ destroy -target=module.gke
+	export KUBECONFIG=~/.kube/foobar-us
+	@kubectl -n flux-system delete gitrepository --all
+	@kubectl -n flux-system delete kustomization --all
 	@terraform -chdir=terraform/production/us-east1/ destroy -target=module.gke
 
 ## Get the Kubernetes contexts and put them in ~/.kube/foobar
 kube-init:
-	export KUBECONFIG=~/.kube/foobar
+	export KUBECONFIG=~/.kube/foobar-eu
 	@gcloud container clusters get-credentials foobar-europe-west9 --region=europe-west9 --project $(project)
+	export KUBECONFIG=~/.kube/foobar-us
 	@gcloud container clusters get-credentials foobar-us-east1 --region=us-east1 --project $(project)
 
 ## Print this help message
