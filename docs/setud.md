@@ -36,6 +36,9 @@ Google Cloud SDK 423.0.0
 Some extra steps are required for the `gcloud` CLI to work properly with GKE (see the [official GCP documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl)).
 
 ```sh
+# Make sure you're logged in
+$ gcloud auth application-default login
+
 # First step is to install the components used to get GKE credentials:
 $ gcloud components install gke-gcloud-auth-plugin
 
@@ -56,3 +59,11 @@ export PATH="$HOME/.asdf/installs/gcloud/423.0.0/bin/:$PATH"
 # The GCP project in which you're working, as a Terraform input variable
 export TF_VAR_project="foobar-XXXXXXX"
 ```
+
+## Todo List
+
+Because there's always room for improvements !
+
+[ ] Linter & Formatter automation
+[ ] Find an alternative to change `$PATH` for the [gke-gcloud-auth-plugin](./docs/setud.md#environments-variables) binary
+[ ] Use `gcloud config configurations` to set the project ID and pass it down to `terraform` (see the [CLI documentation](https://cloud.google.com/sdk/gcloud/reference/config/configurations))
