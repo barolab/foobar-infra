@@ -2,6 +2,10 @@
 
 The purpose of this repository is to answer to a challenge that was given me: Deploy a full Kubernetes platform in two different regions to host the [foobar-api](https://github.com/containous/foobar-api).
 
+1. [Introduction](#introduction)
+2. [Step 1 - Kubernetes Clusters](#step-1---kubernetes-clusters)
+3. [Step 2 - Install Flux](#step-2---install-flux)
+
 ## Introduction
 
 The first step is to make some choices regarding the infrastructure. Given the challenge description I see two requirements:
@@ -191,6 +195,30 @@ All those steps are implemented with Terraform in the [flux module](../terraform
 And the only thing you need to give to Terraform is an environment variable `GITHUB_TOKEN`.
 For now I'm using a Github PAT with Read/Write permissions on this repository settings, allowing
 the module to add Deploy Keys.
+
+And some evidences that everything work as expected (it uses a temporary branch):
+
+![Github Deploy Keys in use](./img/step-2-flux-deploy-key.png)
+
+```sh
+$ kubectl -n flux-system get ks
+NAME                       AGE   READY   STATUS
+foobar-infra-flux-system   10m   True    Applied revision: feat-flux-installation@sha1:fe15097a8968ae44b5c7c16bf5eb69c56c4ba10f
+podinfo                    66s   True    Applied revision: feat-flux-installation@sha1:fe15097a8968ae44b5c7c16bf5eb69c56c4ba10f
+
+$ kubectl -n podinfo get hr
+NAME      AGE     READY   STATUS
+podinfo   3m12s   True    Release reconciliation succeeded
+
+$ kubectl -n podinfo get pods
+NAME      AGE   READY   STATUS
+podinfo   90s   True    Release reconciliation succeeded
+```
+
+That's it for the Flux installation step, next we will:
+- Add the Foobar API code
+- Create a CI job to release the Foobar API Docker Image somewhere
+- Deploy it with Flux !
 
 **Improvements**
 
