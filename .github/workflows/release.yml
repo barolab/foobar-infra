@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: foobar-api
+  IMAGE_NAME: barolab/foobar-api
 
 jobs:
   release:
