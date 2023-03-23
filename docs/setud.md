@@ -58,6 +58,8 @@ export PATH="$HOME/.asdf/installs/gcloud/423.0.0/bin/:$PATH"
 
 # The GCP project in which you're working, as a Terraform input variable
 export TF_VAR_project="foobar-XXXXXXX"
+# A Github PAT with Read/Write permissions on the settings of the repositories you want to reconcile with Flux
+export GITHUB_TOKEN="XXXXXXX"
 ```
 
 ## Todo List

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  path: "./kubernetes/production/eu-west9/podinfo"
+  prune: true
+  interval: 10m
+  targetNamespace: podinfo
+  sourceRef:
+    kind: GitRepository
+    name: foobar-infra

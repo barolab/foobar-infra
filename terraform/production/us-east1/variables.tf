@@ -4,8 +4,8 @@ variable "project" {
 }
 
 locals {
-  region  = "us-east1"
-  zones   = ["us-east1-b", "us-east1-c", "us-east1-d"]
+  region = "us-east1"
+  zones  = ["us-east1-b", "us-east1-c", "us-east1-d"]
 
   cluster = {
     name = "foobar-${local.region}"

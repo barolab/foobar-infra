@@ -67,3 +67,30 @@ module "gke" {
     }
   ]
 }
+
+module "flux" {
+  source = "../../modules/flux"
+  name   = "flux-foobar-us-east1"
+
+  chart = {
+    version = "2.7.0"
+  }
+
+  controllers = {
+    helm = { create = true }
+    source = { create = true }
+    kustomize = { create = true }
+  }
+
+  repositories = {
+    foobar-infra = {
+      git = {
+        url = "ssh://git@github.com/barolab/foobar-infra"
+      }
+
+      kustomizations = {
+        flux-system = { path = "./kubernetes/production/us-east1/flux-system"}
+      }
+    }
+  }
+}
