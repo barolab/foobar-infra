@@ -2,9 +2,13 @@
 
 The purpose of this repository is to answer to a challenge that was given me: Deploy a full Kubernetes platform in two different regions to host the [foobar-api](https://github.com/containous/foobar-api).
 
-1. [Introduction](#introduction)
-2. [Step 1 - Kubernetes Clusters](#step-1---kubernetes-clusters)
-3. [Step 2 - Install Flux](#step-2---install-flux)
+* [Introduction](#introduction)
+* [Step 1 - Kubernetes Clusters](#step-1---kubernetes-clusters)
+* [Step 2 - Install Flux](#step-2---install-flux)
+* [Step 3 - Foobar API Deployment](#step-3---foobar-api-deployment)
+  * [The Docker image](#the-docker-image)
+  * [The Registry secret](#the-registry-secret)
+  * [The TLS certificate](#the-tls-certificate)
 
 ## Introduction
 
