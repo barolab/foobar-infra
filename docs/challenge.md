@@ -328,7 +328,7 @@ Then using Flux & Kustomize, we're only a couple of files away from deploying th
 
 **Improvements**
 
-- [ ] A better release process for the Docker Image, based on Github releases rather than push to any branch
+- [x] A better release process for the Docker Image, based on Github releases rather than push to any branch ([PR#7](https://github.com/barolab/foobar-infra/pull/7))
 - [ ] Something to automate the Kubernetes Docker config deployment (SealedSecrets / External Secrets, Kyverno, etc...)
 - [ ] Docker image should *NOT* run as root (and Kubernetes Security Context should be set accordingly)
 - [ ] Use a `StatefulSet` and change the InitContainer to get the certificate from a backend service (like Vault)
