@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foobar-api
+  namespace: foobar
+  labels:
+    app.kubernetes.io/name: foobar-api
+    app.kubernetes.io/instance: foobar-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: foobar
+    app.kubernetes.io/managed-by: flux
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: foobar-api
+      app.kubernetes.io/instance: foobar-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: foobar-api
+        app.kubernetes.io/instance: foobar-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: foobar
+        app.kubernetes.io/managed-by: flux
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      initContainers:
+        - name: cert-gen
+          image: alpine/openssl
+          args:
+            - req
+            - -nodes
+            - -new
+            - -x509
+            - -keyout
+            - /cert/key.pem
+            - -out
+            - /cert/cert.pem
+            - -subj
+            - "/C=FR/ST=France/L=Nantes/O=Dis/CN=foobar.raimon.dev"
+
+          volumeMounts:
+            - name: cert
+              mountPath: /cert
+              readOnly: false
+
+      containers:
+        - name: foobar-api
+          image: ghcr.io/barolab/foobar-api:feat-foobar-api-release
+          ports:
+            - name: https
+              protocol: TCP
+              containerPort: 80
+
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 100m
+            limits:
+              memory: 32Mi
+              cpu: 100m
+
+          readinessProbe:
+            tcpSocket:
+              port: 80
+          livenessProbe:
+            tcpSocket:
+              port: 80
+
+          volumeMounts:
+            - name: cert
+              mountPath: /cert
+              readOnly: true
+
+      volumes:
+        - name: cert
+          persistentVolumeClaim:
+            claimName: foobar-api-cert
