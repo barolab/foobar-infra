@@ -236,7 +236,7 @@ There's a couple of requirements to do so:
 3. The `foobar-api` needs a TLS certificate to boot
 4. We need the Kubernetes manifests for the `foobar-api` on Flux
 
-We won't necessarily try to have a valid TLS certificate or push it on a PVC right now.
+We won't necessarily try to have a valid TLS certificate.
 
 ### The Docker image
 
@@ -257,7 +257,74 @@ Terraform modules, we'll wrap them all into a `.env` file at the root of this re
 
 ### The TLS certificate
 
+Looking at the code for the `foobar-api` application, you'll see that the application needs a
+TLS certificate in order to boot.
+
+Running it locally will prove it quite quickly:
+
+```sh
+$ cd ./app
+$ go mod download
+$ go run main.go
+Starting up on port 80
+2023/03/24 12:17:45 You need to provide a certificate
+exit status 1
+```
+
+So let's create a self-signed certificate manually, and try to boot the application:
+
+```sh
+$ mkdir cert
+$ openssl req -nodes -new -x509 \
+  -keyout cert/key.pem -out cert/cert.pem \
+  -subj "/C=FR/ST=France/L=Nantes/O=Dis/CN=foobar.raimon.dev"
+
+$ docker run --rm \
+  -p 8080:80 \
+  -v "$(pwd)/cert:/cert" \
+	ghcr.io/barolab/foobar-api:latest
+Starting up on port 80
+```
+
+Looks like the application as started properly, let's make sure:
+
+```sh
+$ curl -k https://localhost:8080
+Hostname: 0a90aee2c3eb
+IP: 127.0.0.1
+IP: 172.17.0.2
+RemoteAddr: 172.17.0.1:43804
+GET / HTTP/1.1
+Host: localhost:8080
+User-Agent: curl/7.81.0
+Accept: */*
+```
+
+Apart from the `-k` option, it seems it's working fine!
+
+### Kubernetes Deployment
+
+And now for the Kubernetes part, we'll need:
+- a [PersistentVolumeClaim](../kubernetes/base/foobar/foobar-api/pvc.yml)
+- a [Deployment](../kubernetes/base/foobar/foobar-api/deployment.yml)
+- a [Service](../kubernetes/base/foobar/foobar-api/service.yml)
+
+Since GKE only supports `ReadWriteOnce` PV out of the box, we'll stick with this.
+
+his add two constraints to our `Deployment`:
+1. We can have only one replica at a time
+2. We have to use the `Recreate` strategy
+
+Another solution would be to use a `StatefulSet`, but that would mean each replica will have
+a different certificate, which is not intended for now.
+
+Then using Flux & Kustomize, we're only a couple of files away from deploying this to GKE:
+- [eu-west9](../kubernetes/production/eu-west9/foobar/kustomization.yaml)
+- [us-east1](../kubernetes/production/us-east1/foobar/kustomization.yaml)
+
 **Improvements**
 
 - [ ] A better release process for the Docker Image, based on Github releases rather than push to any branch
 - [ ] Something to automate the Kubernetes Docker config deployment (SealedSecrets / External Secrets, Kyverno, etc...)
+- [ ] Docker image should *NOT* run as root (and Kubernetes Security Context should be set accordingly)
+- [ ] Use a `StatefulSet` and change the InitContainer to get the certificate from a backend service (like Vault)

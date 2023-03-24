@@ -12,3 +12,4 @@ temp/
 
 # DOTENV
 .env
+*.pem
