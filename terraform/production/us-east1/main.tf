@@ -77,8 +77,8 @@ module "flux" {
   }
 
   controllers = {
-    helm = { create = true }
-    source = { create = true }
+    helm      = { create = true }
+    source    = { create = true }
     kustomize = { create = true }
   }
 
@@ -89,8 +89,53 @@ module "flux" {
       }
 
       kustomizations = {
-        flux-system = { path = "./kubernetes/production/us-east1/flux-system"}
+        flux-system = { path = "./kubernetes/production/us-east1/flux-system" }
       }
     }
+  }
+}
+
+resource "kubernetes_namespace" "namespace" {
+  for_each = local.namespaces
+
+  metadata {
+    name = each.key
+  }
+
+  lifecycle {
+    ignore_changes = [
+      metadata[0].annotations,
+      metadata[0].labels
+    ]
+  }
+}
+
+resource "kubernetes_secret" "ghcr" {
+  for_each   = local.namespaces
+  depends_on = [kubernetes_namespace.namespace]
+
+  metadata {
+    name      = "gchr"
+    namespace = each.key
+  }
+
+  type = "kubernetes.io/dockerconfigjson"
+  data = {
+    ".dockerconfigjson" = jsonencode({
+      auths = {
+        "ghcr.io" = {
+          "username" = var.ghcr_user
+          "password" = var.ghcr_password
+          "email"    = var.ghcr_email
+          "auth"     = base64encode("${var.ghcr_user}:${var.ghcr_password}")
+        }
+      }
+    })
+  }
+
+  lifecycle {
+    ignore_changes = [
+      metadata[0].annotations
+    ]
   }
 }

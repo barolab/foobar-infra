@@ -42,24 +42,36 @@ $ gcloud auth application-default login
 # First step is to install the components used to get GKE credentials:
 $ gcloud components install gke-gcloud-auth-plugin
 
+# In order for the above to work, you'll need to update your PATH
+# to make sure the gka auth plugin is available
+export PATH="$HOME/.asdf/installs/gcloud/423.0.0/bin/:$PATH"
+
 # Don't forget to set the GCP project ID (or use a new configuration)
 $ gcloud project --set project foobar-XXXXXXXXXX
 ```
 
 ## Environments Variables
 
-Some environment variables are mandatory to work with this repository.
-Here's a quick overview as a code snippet:
+In order to work with Terraform, you'll need to pass a bunch of variables.
+They're common to all Terraform modules, so my suggestion is to use a `.env`
+file at the root of this repository (with the ZSH `dotenv` plugin to source it automatically).
+
+Here's what it looks like:
 
 ```sh
-# First thing is to add the gcloud component above in your $PATH
-# With ASDF the component binary os inside the gcloud install directory
-export PATH="$HOME/.asdf/installs/gcloud/423.0.0/bin/:$PATH"
+# The GCP Project ID, used in the Makefile to get the GKE KUBECONFIG files
+GCP_PROJECT="foobar-XXXXXXX"
 
-# The GCP project in which you're working, as a Terraform input variable
-export TF_VAR_project="foobar-XXXXXXX"
-# A Github PAT with Read/Write permissions on the settings of the repositories you want to reconcile with Flux
-export GITHUB_TOKEN="XXXXXXX"
+# The Github PAT with admin setting on the repository
+# It will be used by Terraform to create the Deployment Keys used by Flux to access the private repo over SSH
+GITHUB_TOKEN="XXXXXXXXXXXXXXXXXXXXXXXX"
+
+# The GCP Project where the GKE clusters will be created
+TF_VAR_project="foobar-XXXXXXX"
+# The Github account (PAT) with read access to packages, it will be used by GKE to pull artifacts from GHCR
+TF_VAR_ghcr_user="XXXXXXX"
+TF_VAR_ghcr_email="XXXXXXX"
+TF_VAR_ghcr_password="XXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
 ## Todo List

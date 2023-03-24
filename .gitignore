@@ -9,3 +9,6 @@
 .idea/
 .vscode
 temp/
+
+# DOTENV
+.env

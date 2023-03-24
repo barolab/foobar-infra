@@ -224,3 +224,40 @@ That's it for the Flux installation step, next we will:
 
 - [ ] Use a Github Service Account to create the SSH deploy key
 - [ ] Find a better way than using an Environment Variable to pass the Github Token to Terraform
+
+## Step 3 - Foobar API deployment
+
+For this step the goal is to have the `foobar-api` up and running on our GKE cluster.
+We'll try to access it with a `kubectl port-forward` to make sure it's working properly.
+
+There's a couple of requirements to do so:
+1. The `foobar-api` needs to be available as a Docker Image on a Registry
+2. The GKE clusters must had access to that Registry
+3. The `foobar-api` needs a TLS certificate to boot
+4. We need the Kubernetes manifests for the `foobar-api` on Flux
+
+We won't necessarily try to have a valid TLS certificate or push it on a PVC right now.
+
+### The Docker image
+
+For the first requirements, it's rather simple, we add the Go source code under [./app](../app/main.go),
+add a [Dockerfile](../app/Dockerfile) and setup a [Github Workflow](../.github/workflows/release.yml) to
+automatically release the Docker image on a push to a branch.
+
+### The Registry Secret
+
+The Docker Image will be released on GHCR, and since we're using a private repository we need to have
+a Kubernetes Docker config secret with a Token that `kubelet` can use to pull the Docker image.
+
+For simplicity I'll use a PAT from my Github Account instead of using a Service Account, the only permissions
+that this token requires is `read:packages`.
+
+We'll pass that to Terraform using the ENV variable, and since we're adding more and more variables to those
+Terraform modules, we'll wrap them all into a `.env` file at the root of this repository.
+
+### The TLS certificate
+
+**Improvements**
+
+- [ ] A better release process for the Docker Image, based on Github releases rather than push to any branch
+- [ ] Something to automate the Kubernetes Docker config deployment (SealedSecrets / External Secrets, Kyverno, etc...)
