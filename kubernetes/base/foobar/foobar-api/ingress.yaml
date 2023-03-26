@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: foobar-api
   namespace: foobar
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
   labels:
     app.kubernetes.io/name: foobar-api
     app.kubernetes.io/instance: foobar-api
@@ -22,3 +24,8 @@ spec:
             name: foobar-api
             port:
               name: https
+
+  tls:
+    - secretName: foobar-api-tls
+      hosts:
+        - api.raimon.dev

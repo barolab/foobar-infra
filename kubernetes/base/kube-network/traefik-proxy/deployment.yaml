@@ -53,8 +53,11 @@ spec:
           - --entrypoints.metrics.address=:9100/tcp
           - --entrypoints.traefik.address=:9000/tcp
           - --entrypoints.web.address=:8000/tcp
+          - --entrypoints.web.http.redirections.entryPoint.to=:443
+          - --entrypoints.web.http.redirections.entryPoint.scheme=https
           - --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
           - --entrypoints.websecure.address=:8443/tcp
+          - --entrypoints.websecure.http.tls=true
           - --entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
           - --global.checknewversion
           - --log.format=json
