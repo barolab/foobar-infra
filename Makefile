@@ -16,36 +16,61 @@ default: help
 fmt:
 	@terraform fmt -write -recursive ./terraform
 
-## Initialize the terraform modules
-tf-init:
+## Init the terraform modules
+tf-init: tf-init-eu tf-init-us
+
+## Init the terraform GKE module (EU)
+tf-init-eu:
 	@terraform -chdir=terraform/production/eu-west9/ init
+
+## Init the terraform GKE module (US)
+tf-init-us:
 	@terraform -chdir=terraform/production/us-east1/ init
 
+## Init the terraform DNS module
+tf-init-dns:
+	@terraform -chdir=terraform/production/dns/ init
+
 ## Apply the terraform modules
-tf-apply:
+tf-apply: tf-apply-eu tf-apply-us
+
+## Apply the terraform module (EU)
+tf-apply-eu:
 	@terraform -chdir=terraform/production/eu-west9/ apply
+
+## Apply the terraform module (US)
+tf-apply-us:
 	@terraform -chdir=terraform/production/us-east1/ apply
 
 ## Destroy the terraform modules
-tf-destroy:
-	@terraform -chdir=terraform/production/eu-west9/ apply
-	@terraform -chdir=terraform/production/us-east1/ apply
+tf-destroy: tf-destroy-eu tf-destroy-us
 
-## Destroy Flux resources and the GKE clusters
-tf-teardown:
-	export KUBECONFIG=~/.kube/foobar-eu
-	@kubectl -n flux-system delete gitrepository --all
-	@kubectl -n flux-system delete kustomization --all
+## Destroy the terraform module (EU)
+tf-destroy-eu:
+	@terraform -chdir=terraform/production/eu-west9/ destroy
+
+## Destroy the terraform module (US)
+tf-destroy-us:
+	@terraform -chdir=terraform/production/us-east1/ destroy
+
+## Destroy the GKE clusters
+tf-teardown: tf-teardown-eu tf-teardown-us
+
+## Destroy the GKE cluster (EU)
+tf-teardown-eu:
 	@terraform -chdir=terraform/production/eu-west9/ destroy -target=module.gke
-	export KUBECONFIG=~/.kube/foobar-us
-	@kubectl -n flux-system delete gitrepository --all
-	@kubectl -n flux-system delete kustomization --all
+
+## Destroy the GKE cluster (US)
+tf-teardown-us:
 	@terraform -chdir=terraform/production/us-east1/ destroy -target=module.gke
 
-## Get the Kubernetes contexts and put them in ~/.kube/foobar
-kube-init:
+## Get the Kubernetes contexts and put them in ~/.kube/foobar-eu  (EU)
+kube-init-eu:
 	export KUBECONFIG=~/.kube/foobar-eu
 	@gcloud container clusters get-credentials foobar-europe-west9 --region=europe-west9 --project $(project)
+
+## Get the Kubernetes contexts and put them in ~/.kube/foobar-us (US)
+kube-init-us:
 	export KUBECONFIG=~/.kube/foobar-us
 	@gcloud container clusters get-credentials foobar-us-east1 --region=us-east1 --project $(project)
 

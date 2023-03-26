@@ -12,11 +12,21 @@ Usage:
 
 Targets:
   fmt             Format the Terraform code
-  tf-init         Initialize the terraform modules
+  tf-init         Init the terraform modules
+  tf-init-eu      Init the terraform GKE module (EU)
+  tf-init-us      Init the terraform GKE module (US)
+  tf-init-dns     Init the terraform DNS module
   tf-apply        Apply the terraform modules
+  tf-apply-eu     Apply the terraform module (EU)
+  tf-apply-us     Apply the terraform module (US)
   tf-destroy      Destroy the terraform modules
-  tf-teardown     Destroy only the terraform resources that costs $$$
-  kube-init       Get the Kubernetes contexts and put them in ~/.kube/foobar
+  tf-destroy-eu   Destroy the terraform module (EU)
+  tf-destroy-us   Destroy the terraform module (US)
+  tf-teardown     Destroy the GKE clusters
+  tf-teardown-eu  Destroy the GKE cluster (EU)
+  tf-teardown-us  Destroy the GKE cluster (US)
+  kube-init-eu    Get the Kubernetes contexts and put them in ~/.kube/foobar-eu  (EU)
+  kube-init-us    Get the Kubernetes contexts and put them in ~/.kube/foobar-us (US)
   help            Print this help message
 ```
 

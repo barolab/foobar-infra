@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: flux-system
 resources:
+  # Traefik
   - traefik/ingressroute.yaml
   - traefik/ingressroutetcp.yaml
   - traefik/ingressrouteudp.yaml
@@ -11,3 +12,10 @@ resources:
   - traefik/tlsoptions.yaml
   - traefik/tlsstores.yaml
   - traefik/traefikservices.yaml
+  # Cert Manager
+  - cert-manager/certificaterequests.yaml
+  - cert-manager/certificates.yaml
+  - cert-manager/challenges.yaml
+  - cert-manager/clusterissuers.yaml
+  - cert-manager/issuers.yaml
+  - cert-manager/orders.yaml

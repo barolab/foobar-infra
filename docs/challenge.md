@@ -9,6 +9,8 @@ The purpose of this repository is to answer to a challenge that was given me: De
   * [The Docker image](#the-docker-image)
   * [The Registry secret](#the-registry-secret)
   * [The TLS certificate](#the-tls-certificate)
+* [Step 4 - Ingress Controller](#step-4---ingress-controller)
+* [Step 5 - DNS & TLS certificate](#step-5---dns--tls-certificates)
 
 ## Introduction
 
@@ -461,3 +463,155 @@ Skipping certificate validation is not ideal though, we'll have to try and use c
 **Improvements**
 
 - [ ] Use a private authority to sign certificates that will be valid for both `foobar-api` and `traefik-proxy` (and remove [this flag](https://github.com/barolab/foobar-infra/pull/11/files#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R71))
+
+
+## Step 5 - DNS & TLS Certificates
+
+Time to make the `foobar-api` publicly available !
+For this we need to have a DNS record pointing to our Load Balancer, and a valid TLS certificate to make sure the public connection between Traefik and our clients are secured.
+
+We'll start by creating a Google Cloud DNS Zone with Terraform under [/terraform/root/dns](/terraform/root/dns/main.tf).
+
+> I'm using a personal registered DNS name with no records on it yet.
+> I just changed the NS record to the GCP ones to make sure I properly resolve the DNS records registered on GCP.
+
+Once we have a DNS zone, we're going to create a DNS A record using terraform.
+It will be a regional records, with the IPs of both EU & US load balancers.
+
+For now there is no health check, we just get the IPs from Kubernetes service status under
+[/terraform/production/dns](/terraform/production/dns/main.tf). Running a plan seems to give us what we want:
+
+```sh
+  # google_dns_record_set.api will be created
+  + resource "google_dns_record_set" "api" {
+      + id           = (known after apply)
+      + managed_zone = "public-raimon-dev"
+      + name         = "api.raimon.dev."
+      + project      = (known after apply)
+      + ttl          = 30
+      + type         = "A"
+
+      + routing_policy {
+          + geo {
+              + location = "europe-west9"
+              + rrdatas  = [
+                  + "34.163.106.236",
+                ]
+            }
+          + geo {
+              + location = "us-east1"
+              + rrdatas  = [
+                  + "34.23.1.19",
+                ]
+            }
+        }
+    }
+```
+
+Let's connect to the GKE clusters and look at the IP of the Load Balancers to make sure everything is alright:
+
+```sh
+$ export KUBECONFIG=~/.kube/foobar-eu
+$ kubectl -n kube-network get svc
+NAME                TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                      AGE
+traefik-proxy-api   ClusterIP      192.168.93.62    <none>           9100/TCP,9000/TCP            13m
+traefik-proxy-lb    LoadBalancer   192.168.83.128   34.163.106.236   80:30558/TCP,443:30696/TCP   13m
+
+$ export KUBECONFIG=~/.kube/foobar-us
+$ kubectl -n kube-network get svc
+NAME                TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+traefik-proxy-api   ClusterIP      192.168.94.226   <none>        9100/TCP,9000/TCP            13m
+traefik-proxy-lb    LoadBalancer   192.168.99.86    34.23.1.19    80:31523/TCP,443:31843/TCP   13m
+
+# Let's use our favorite linux tool to validate all of this
+# I'm in France so expect the EU IP as the DNS query response
+$ dig api.raimon.dev
+....
+;; ANSWER SECTION:
+api.raimon.dev.         30      IN      A       34.163.106.236
+
+# Now we send an HTTP request (curl uses the proper IP)
+$ curl -v http://api.raimon.dev/foobar
+*   Trying 34.163.106.236:80...
+* Connected to api.raimon.dev (34.163.106.236) port 80 (#0)
+...
+Hostname: foobar-api-57d8d7f68c-pzn5p
+...
+```
+
+Good ! Now we need to generate a TLS certificate. The easiest and cheapest solution is to use Let's Encrypt
+with CertManager.
+
+And to make things a bit more fun, we're going to use DNS Challenge to validate the certificate. And in order
+for CertManager to access GCP DNS zones, we're going to use a GKE Workload Identity.
+
+For AWS experts, it's exactly like an IRSA, meaning your K8S Service Account can access a GCP Service Account by using the K8S short lived token. Thanks to the Terraform GKE module, this is rather easy to make:
+
+```terraform
+module "cert_manager" {
+  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name       = "cert-manager"
+  namespace  = "kube-security"
+  roles      = ["roles/dns.admin"]
+}
+```
+
+And once applied, we can see the Service Account exists in our GKE clusters, and check that it has the annotation referring to our GCP Service Accounts:
+
+```sh
+$ kubectl -n kube-security get sa cert-manager -o yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cert-manager
+  namespace: kube-security
+  annotations:
+    iam.gke.io/gcp-service-account: europe-west9-cert-manager@foobar-XXXXXXXXXX.iam.gserviceaccount.com
+```
+
+Once this is done, we deploy Cert Manager, along with a Let's Encrypt [Issuer](/kubernetes/production/eu-west9/kube-security/tls/letsencrypt-issuer.yaml).
+We also add the Cert Manager annotation to our Foobar [API Ingress](/kubernetes/base/foobar/foobar-api/ingress.yaml) and check that the certificate gets created:
+
+```sh
+$ kubectl -n foobar describe ingress foobar-api
+...
+Events:
+  Type    Reason             Age   From                       Message
+  ----    ------             ----  ----                       -------
+  Normal  CreateCertificate  19s   cert-manager-ingress-shim  Successfully created Certificate "foobar-api-tls"
+```
+
+We're one step away from having a secured, public endpoint for our API. We just configure Traefik to set TLS on 443 and force the redirection from 80 to 443! (see the [PR#12](https://github.com/barolab/foobar-infra/pull/12/commits/a508341fe6edc4d92fbd901635e5c498cff170f1#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R56))
+
+
+Let's try both in one command:
+```sh
+$ curl -vL http://api.raimon.dev/foobar
+* Connected to api.raimon.dev (34.163.106.236) port 80 (#0)
+...
+< HTTP/1.1 301 Moved Permanently
+< Location: https://api.raimon.dev/foobar
+...
+* Clear auth, redirects to port from 80 to 443
+* Issue another request to this URL: 'https://api.raimon.dev/foobar'
+*   Trying 34.163.106.236:443...
+...
+* Server certificate:
+*  subject: CN=api.raimon.dev
+*  start date: Mar 26 16:04:42 2023 GMT
+*  expire date: Jun 24 16:04:41 2023 GMT
+*  subjectAltName: host "api.raimon.dev" matched cert's "api.raimon.dev"
+*  issuer: C=US; O=Let's Encrypt; CN=R3
+*  SSL certificate verify ok.
+...
+Hostname: foobar-api-57d8d7f68c-pzn5p
+...
+```
+
+Our Foobar API is now publicly available, with regional DNS resolution and a valid TLS certificate ! The next step will be to make it a bit more resilient to outages.
+
+
+**Improvements**
+
+- [ ] Health Check on DNS record, this will make us resilient to a region outage.
+

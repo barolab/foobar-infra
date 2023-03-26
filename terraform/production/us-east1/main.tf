@@ -2,7 +2,7 @@ data "google_client_config" "default" {}
 
 module "network" {
   source  = "terraform-google-modules/network/google"
-  version = ">= 4.0.1"
+  version = "6.0.1"
 
   project_id   = var.project
   network_name = "${local.cluster.name}-network"
@@ -31,6 +31,7 @@ module "network" {
 
 module "gke" {
   source     = "terraform-google-modules/kubernetes-engine/google"
+  version    = "25.0.0"
   project_id = var.project
 
   name        = local.cluster.name
@@ -115,7 +116,7 @@ resource "kubernetes_secret" "ghcr" {
   depends_on = [kubernetes_namespace.namespace]
 
   metadata {
-    name      = "gchr"
+    name      = "ghcr"
     namespace = each.key
   }
 
@@ -131,6 +132,40 @@ resource "kubernetes_secret" "ghcr" {
         }
       }
     })
+  }
+
+  lifecycle {
+    ignore_changes = [
+      metadata[0].annotations
+    ]
+  }
+}
+
+module "cert_manager" {
+  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name       = "cert-manager"
+  namespace  = "kube-security"
+  roles      = ["roles/dns.admin"]
+
+  gcp_sa_name = "${local.region}-cert-manager"
+  project_id  = var.project
+}
+
+# Secret variables pushed to GKE to allow Kustomize to do some substition
+resource "kubernetes_config_map" "variables" {
+  depends_on = [kubernetes_namespace.namespace]
+
+  metadata {
+    name      = "cluster-variables"
+    namespace = "flux-system"
+  }
+
+  data = {
+    gcp_project = var.project
+    gcp_region  = var.region
+
+    cert_manager_fqdn  = module.cert_manager.gcp_service_account_fqn
+    cert_manager_email = module.cert_manager.gcp_service_account_email
   }
 
   lifecycle {

@@ -72,6 +72,9 @@ GITHUB_TOKEN="XXXXXXXXXXXXXXXXXXXXXXXX"
 
 # The GCP Project where the GKE clusters will be created
 TF_VAR_project="foobar-XXXXXXX"
+# The DNS to host our Foobar API
+TF_VAR_domain="raimon.dev"
+
 # The Github account (PAT) with read access to packages, it will be used by GKE to pull artifacts from GHCR
 TF_VAR_ghcr_user="XXXXXXX"
 TF_VAR_ghcr_email="XXXXXXX"
