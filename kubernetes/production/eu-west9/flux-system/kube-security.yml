@@ -18,3 +18,8 @@ spec:
       kind: Deployment
       name: cert-manager
       namespace: kube-security
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-variables
+        namespace: kube-security

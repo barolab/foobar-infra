@@ -25,6 +25,16 @@ spec:
 
     installCRDs: false
     namespace: kube-security
+
+    automountServiceAccountToken: true
+    serviceAccount:
+      create: false
+      name: cert-manager
+
+    extraFlags:
+      - --cluster-issuer-ambient-credentials
+      - --issuer-ambient-credentials
+
     resources:
       limits:
         memory: 100Mi

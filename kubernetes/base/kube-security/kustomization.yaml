@@ -4,3 +4,4 @@ namespace: flux-system
 resources:
   - cert-manager/helm-repository.yaml
   - cert-manager/helm-release.yaml
+  - tls/letsencrypt-issuer.yaml
