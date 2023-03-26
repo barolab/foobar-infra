@@ -115,7 +115,7 @@ resource "kubernetes_secret" "ghcr" {
   depends_on = [kubernetes_namespace.namespace]
 
   metadata {
-    name      = "gchr"
+    name      = "ghcr"
     namespace = each.key
   }
 
