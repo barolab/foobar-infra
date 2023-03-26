@@ -1,0 +1,19 @@
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: traefik-proxy
+  namespace: kube-network
+  labels:
+    app.kubernetes.io/name: traefik-proxy
+    app.kubernetes.io/instance: traefik-proxy
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: traefik
+    app.kubernetes.io/managed-by: flux
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: traefik-proxy
+      app.kubernetes.io/instance: traefik-proxy
+

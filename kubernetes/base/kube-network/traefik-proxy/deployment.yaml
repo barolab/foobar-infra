@@ -1,0 +1,141 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik-proxy
+  namespace: kube-network
+  labels:
+    app.kubernetes.io/name: traefik-proxy
+    app.kubernetes.io/instance: traefik-proxy
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: traefik
+    app.kubernetes.io/managed-by: flux
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: traefik-proxy
+      app.kubernetes.io/instance: traefik-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: traefik-proxy
+        app.kubernetes.io/instance: traefik-proxy
+        app.kubernetes.io/component: network
+        app.kubernetes.io/part-of: traefik
+        app.kubernetes.io/managed-by: flux
+    spec:
+      hostNetwork: false
+      serviceAccountName: traefik-proxy
+      terminationGracePeriodSeconds: 60
+
+      securityContext:
+        fsGroup: 65532
+
+      containers:
+      - name: traefik-proxy
+        image: traefik:v2.9.8
+        imagePullPolicy: IfNotPresent
+        args:
+          - --accesslog.fields.defaultmode=keep
+          - --accesslog.fields.headers.defaultmode=drop
+          - --accesslog.format=json
+          - --accesslog=true
+          - --api.dashboard=true
+          - --api.debug=true
+          - --api.insecure=true
+          - --api=true
+          - --entrypoints.metrics.address=:9100/tcp
+          - --entrypoints.traefik.address=:9000/tcp
+          - --entrypoints.web.address=:8000/tcp
+          - --entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+          - --entrypoints.websecure.address=:8443/tcp
+          - --entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+          - --global.checknewversion
+          - --log.format=json
+          - --log.level=INFO
+          - --metrics.prometheus.entrypoint=metrics
+          - --metrics.prometheus=true
+          - --ping=true
+          - --providers.kubernetescrd
+          - --providers.kubernetescrd.ingressclass=traefik-proxy
+          - --providers.kubernetesingress
+          - --providers.kubernetesingress.ingressclass=traefik-proxy
+          - --providers.kubernetesingress.ingressendpoint.publishedservice=kube-network/traefik-proxy-lb
+          # To be removed once Backend services use valid certificates
+          - --serverstransport.insecureSkipVerify=true
+
+        ports:
+        - name: metrics
+          protocol: TCP
+          containerPort: 9100
+        - name: traefik
+          protocol: TCP
+          containerPort: 9000
+        - name: web
+          protocol: TCP
+          containerPort: 8000
+        - name: websecure
+          protocol: TCP
+          containerPort: 8443
+
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+
+        readinessProbe:
+          initialDelaySeconds: 2
+          failureThreshold: 1
+          successThreshold: 1
+          timeoutSeconds: 2
+          periodSeconds: 10
+          httpGet:
+            path: /ping
+            port: 9000
+            scheme: HTTP
+
+        livenessProbe:
+          initialDelaySeconds: 2
+          failureThreshold: 3
+          successThreshold: 1
+          timeoutSeconds: 2
+          periodSeconds: 10
+          httpGet:
+            path: /ping
+            port: 9000
+            scheme: HTTP
+
+        lifecycle:
+          preStop:
+            exec:
+              command: [/bin/sh, -c, sleep 40]
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsGroup: 65532
+          runAsNonRoot: true
+          runAsUser: 65532
+
+        volumeMounts:
+          - name: data
+            mountPath: /data
+          - name: tmp
+            mountPath: /tmp
+
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

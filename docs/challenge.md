@@ -332,3 +332,132 @@ Then using Flux & Kustomize, we're only a couple of files away from deploying th
 - [ ] Something to automate the Kubernetes Docker config deployment (SealedSecrets / External Secrets, Kyverno, etc...)
 - [ ] Docker image should *NOT* run as root (and Kubernetes Security Context should be set accordingly)
 - [ ] Use a `StatefulSet` and change the InitContainer to get the certificate from a backend service (like Vault)
+
+
+## Step 4 - Ingress Controller
+
+Once our `foobar-api` is up and running, we can start thinking about exposing it to the outside world.
+For this we're going to use Traefik Proxy with GKE Load Balancers.
+
+Just like with the `foobar-api` we're going to use a Kustomize base referenced in each regions:
+- [Traefik Base](/kubernetes/base/kube-network/kustomization.yaml)
+- [Europe Kustomization](/kubernetes/production/eu-west9/flux-system/kube-network.yml)
+- [Europe Overlay](/kubernetes/production/eu-west9/kube-network/kustomization.yaml)
+
+While doping this we're going to experiment a bit with two features of Flux which I think are very useful here.
+To avoid spending too much money on GCP resources, I usually destroy everything once I validated my changes.
+Which means the dependencies have to be set properly, and services needs to boot once their dependencies are ready.
+
+And that's exactly what Flux does here:
+
+```sh
+$ kubectl get ks -A
+flux-system   crds                       36s   True      Applied revision: feat-deploy-traefik@sha1:bd3887c743ddeb6289016dd0a668486dee41cf39
+flux-system   foobar                     36s   False     dependency 'flux-system/kube-network' is not ready
+flux-system   foobar-infra-flux-system   42s   Unknown   Reconciliation in progress
+flux-system   kube-network               36s   Unknown   Reconciliation in progress
+flux-system   podinfo                    36s   True      Applied revision: feat-deploy-traefik@sha1:bd3887c743ddeb6289016dd0a668486dee41cf39
+```
+
+The CRDs have been properly reconciled, so `kube-network` (where Traefik is deployed) can be reconciled.
+But `foobar` needs `kube-network` in order to work (for the `Ingress` resource), and so Flux waits for the
+dependency to be ready.
+
+
+And all Kustomizations are Ready, we have our Traefik PODs, and a Load Balancer with a public IP:
+```sh
+$ kubectl -n kube-network get pods
+NAME                             READY   STATUS    RESTARTS   AGE
+traefik-proxy-6df7c7b94d-44g7k   1/1     Running   0          19s
+traefik-proxy-6df7c7b94d-bfwwl   1/1     Running   0          19s
+
+$ kubectl -n kube-network get svc
+NAME                TYPE           CLUSTER-IP        EXTERNAL-IP    PORT(S)                      AGE
+traefik-proxy-api   ClusterIP      192.168.123.242   <none>         9100/TCP,9000/TCP            67s
+traefik-proxy-lb    LoadBalancer   192.168.85.50     34.155.XXX.XXX 80:32662/TCP,443:31270/TCP   67s
+```
+
+Using a port-forward on port 9000 on the service `traefik-proxy-api` we can check the Traefik Proxy
+dashboard and make sure our `foobar-api` route is present:
+
+![Traefik Dashbaord with foobar route loaded](./img/traefik-dashboard.png)
+
+All good, now let's try to curl that Ingress using the Load Balancer IP:
+
+```sh
+$ curl -v http://api.raimon.dev/foobar --resolve "api.raimon.dev:80:34.155.XXX.XXX"
+* Added api.raimon.dev:80:34.155.XXX.XXX to DNS cache
+* Hostname api.raimon.dev was found in DNS cache
+*   Trying 34.155.XXX.XXX:80...
+* Connected to api.raimon.dev (34.155.XXX.XXX) port 80 (#0)
+> GET /foobar HTTP/1.1
+> Host: api.raimon.dev
+> User-Agent: curl/7.81.0
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 500 Internal Server Error
+< Date: Sun, 26 Mar 2023 09:20:52 GMT
+< Content-Length: 21
+< Content-Type: text/plain; charset=utf-8
+<
+* Connection #0 to host api.raimon.dev left intact
+Internal Server Error%
+```
+
+Bummer, there's an error somewhere in the stack. The first thing we want to validate is whether or not
+the HTTP request reached our `foobar-api` service:
+
+```
+$ kubectl -n foobar logs -f deploy/foobar-api
+...
+2023/03/26 09:20:52 http: TLS handshake error from 192.168.1.13:42042: remote error: tls: bad certificate
+```
+
+Seems like the Time matches, the request reached our `foobar-api` but failed with a TLS error.
+The problem is most likely that we're trying to validate that certificate even if it's a self-signed one.
+
+Let's tell [Traefik to skip the TLS verification on backend services](https://github.com/barolab/foobar-infra/pull/11/files#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R71) and try again:
+
+```sh
+$ curl -v http://api.raimon.dev/foobar --resolve "api.raimon.dev:80:34.155.XXX.XXX"
+* Added api.raimon.dev:80:34.155.XXX.XXX to DNS cache
+* Hostname api.raimon.dev was found in DNS cache
+*   Trying 34.155.XXX.XXX:80...
+* Connected to api.raimon.dev (34.155.XXX.XXX) port 80 (#0)
+> GET /foobar HTTP/1.1
+> Host: api.raimon.dev
+> User-Agent: curl/7.81.0
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Content-Length: 393
+< Content-Type: text/plain; charset=utf-8
+< Date: Sun, 26 Mar 2023 10:05:35 GMT
+<
+Hostname: foobar-api-57d8d7f68c-x2njn
+IP: 127.0.0.1
+IP: 192.168.0.8
+RemoteAddr: 192.168.1.10:51206
+GET /foobar HTTP/1.1
+Host: api.raimon.dev
+User-Agent: curl/7.81.0
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: 192.168.1.1
+X-Forwarded-Host: api.raimon.dev
+X-Forwarded-Port: 80
+X-Forwarded-Proto: http
+X-Forwarded-Server: traefik-proxy-6db6bd9cbb-d5tws
+X-Real-Ip: 192.168.1.1
+
+* Connection #0 to host api.raimon.dev left intact
+```
+
+Here we are, our `foobar-api` gave us a response !
+Skipping certificate validation is not ideal though, we'll have to try and use certificates that are valid (at least for the Traefik PODs, not necessarily for public clients)
+
+**Improvements**
+
+- [ ] Use a private authority to sign certificates that will be valid for both `foobar-api` and `traefik-proxy` (and remove [this flag](https://github.com/barolab/foobar-infra/pull/11/files#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R71))
