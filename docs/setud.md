@@ -42,12 +42,16 @@ $ gcloud auth application-default login
 # First step is to install the components used to get GKE credentials:
 $ gcloud components install gke-gcloud-auth-plugin
 
+# Then enable the mandatory services
+$ gcloud services enable "dns.googleapis.com"
+$ gcloud services enable "container.googleapis.com"
+
 # In order for the above to work, you'll need to update your PATH
 # to make sure the gka auth plugin is available
 export PATH="$HOME/.asdf/installs/gcloud/423.0.0/bin/:$PATH"
 
 # Don't forget to set the GCP project ID (or use a new configuration)
-$ gcloud project --set project foobar-XXXXXXXXXX
+$ gcloud config set project foobar-XXXXXXXXXX
 ```
 
 ## Environments Variables
