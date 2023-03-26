@@ -1,0 +1,85 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: kube-security
+spec:
+  interval: 5m
+  releaseName: cert-manager
+  maxHistory: 2
+  chart:
+    spec:
+      chart: cert-manager
+      version: 1.11.0
+      interval: 10m
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: kube-security
+  values:
+    podDnsPolicy: None
+    podDnsConfig:
+      nameservers:
+        - 1.1.1.1
+        - 8.8.8.8
+
+    installCRDs: false
+    namespace: kube-security
+    resources:
+      limits:
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+    securityContext:
+      runAsNonRoot: true
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+
+    webhook:
+      enabled: true
+      replicaCount: 1
+
+      resources:
+        limits:
+          memory: 100Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+
+      securityContext:
+        runAsNonRoot: true
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+          - ALL
+
+    cainjector:
+      enabled: true
+      replicaCount: 1
+
+      resources:
+        limits:
+          memory: 100Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+
+      securityContext:
+        runAsNonRoot: true
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+          - ALL
+
+    prometheus:
+      enabled: false

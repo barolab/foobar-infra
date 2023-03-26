@@ -1,0 +1,20 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: kube-security
+  namespace: flux-system
+spec:
+  path: "./kubernetes/production/us-east1/kube-security"
+  prune: true
+  interval: 10m
+  targetNamespace: kube-security
+  sourceRef:
+    kind: GitRepository
+    name: foobar-infra
+  dependsOn:
+    - name: crds
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: cert-manager
+      namespace: kube-security
