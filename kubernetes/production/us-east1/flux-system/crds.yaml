@@ -1,0 +1,13 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: crds
+  namespace: flux-system
+spec:
+  path: "./kubernetes/production/us-east1/crds"
+  prune: true
+  interval: 10m
+  targetNamespace: default
+  sourceRef:
+    kind: GitRepository
+    name: foobar-infra
