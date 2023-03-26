@@ -5,3 +5,4 @@ resources:
   - foobar-api/deployment.yaml
   - foobar-api/pvc.yaml
   - foobar-api/service.yaml
+  - foobar-api/ingress.yaml

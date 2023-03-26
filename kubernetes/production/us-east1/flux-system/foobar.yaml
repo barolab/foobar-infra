@@ -11,3 +11,10 @@ spec:
   sourceRef:
     kind: GitRepository
     name: foobar-infra
+  dependsOn:
+    - name: kube-network
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: foobar-api
+      namespace: foobar
