@@ -2,7 +2,7 @@ data "google_client_config" "default" {}
 
 module "network" {
   source  = "terraform-google-modules/network/google"
-  version = ">= 4.0.1"
+  version = "6.0.1"
 
   project_id   = var.project
   network_name = "${local.cluster.name}-network"
@@ -31,6 +31,7 @@ module "network" {
 
 module "gke" {
   source     = "terraform-google-modules/kubernetes-engine/google"
+  version    = "25.0.0"
   project_id = var.project
 
   name        = local.cluster.name
@@ -52,6 +53,7 @@ module "gke" {
   # Security
   remove_default_node_pool = true
   service_account          = "create"
+  node_metadata            = "GKE_METADATA"
 
   # Node pools
   node_pools = [
@@ -138,4 +140,14 @@ resource "kubernetes_secret" "ghcr" {
       metadata[0].annotations
     ]
   }
+}
+
+module "cert_manager" {
+  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name       = "cert-manager"
+  namespace  = "kube-security"
+  roles      = ["roles/dns.admin"]
+
+  gcp_sa_name = "${local.region}-cert-manager"
+  project_id  = var.project
 }
