@@ -67,6 +67,8 @@ spec:
           - --providers.kubernetesingress
           - --providers.kubernetesingress.ingressclass=traefik-proxy
           - --providers.kubernetesingress.ingressendpoint.publishedservice=kube-network/traefik-proxy-lb
+          # To be removed once Backend services use valid certificates
+          - --serverstransport.insecureSkipVerify=true
 
         ports:
         - name: metrics
