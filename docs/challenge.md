@@ -613,5 +613,14 @@ Our Foobar API is now publicly available, with regional DNS resolution and a val
 
 **Improvements**
 
-- [ ] Health Check on DNS record, this will make us resilient to a region outage.
+- [ ] Health Check on DNS record, this will make us resilient to a region outage (it appears that this is not yet supported for public DNS zones on GCP).
 
+## Step 7 - Final Steps
+
+### DNS Load Balancing
+
+Sadly GCP does not support DNS health check on public zone yet, it's only supported for private zones.
+I intended to use this in order to show network distribution by destroying the EU cluster while running a perf test.
+Normally it should have fallback on US, but without health check it will just continue to fail until a manual action of removing EU from the DNS record is run.
+
+So change of plans, we're going to enable Weighted Round Robin at the DNS level instead of using Geo location records. This will allow us to show load balancing between EU & US (see [PR#15](https://github.com/barolab/foobar-infra/pull/15)).
