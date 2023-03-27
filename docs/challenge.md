@@ -624,3 +624,13 @@ I intended to use this in order to show network distribution by destroying the E
 Normally it should have fallback on US, but without health check it will just continue to fail until a manual action of removing EU from the DNS record is run.
 
 So change of plans, we're going to enable Weighted Round Robin at the DNS level instead of using Geo location records. This will allow us to show load balancing between EU & US (see [PR#15](https://github.com/barolab/foobar-infra/pull/15)).
+
+### Observability with Grafana Cloud
+
+We still need to understand what's happening on our GKE clusters. I'm quite comfortable with the Grafana stack and therefor will try the Grafana Cloud offering.
+
+Right after creating the account, you should be able to launch Grafana, click on the `Kubernetes Monitoring` tab on the left, and then on the `Start sending data` button.
+
+This will open a guide on how to setup Grafana Cloud on Kubernetes. Inside the manifests you should find you Prometheus remote write URL and credentials, and the same for your Loki instance. Set the variables in your `.dotenv` like shown in the [setup doc](/docs/setud.md) and apply the Terraform modules to deploy them in the Flux variables `ConfigMap`.
+
+You should now start to see clusters in your Grafana Cloud account! For now there's nothing fancy, just the basic Kubernetes monitoring (enough to get started).
