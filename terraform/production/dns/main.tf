@@ -35,12 +35,12 @@ resource "google_dns_record_set" "api" {
   managed_zone = data.terraform_remote_state.dns.outputs.public_zone.name
 
   routing_policy {
-    geo {
-      location = "europe-west9"
+    wrr {
+      weight   = 0.5
       rrdatas  = [local.proxy_eu_ip]
     }
-    geo {
-      location = "us-east1"
+    wrr {
+      weight   = 0.5
       rrdatas  = [local.proxy_us_ip]
     }
   }
