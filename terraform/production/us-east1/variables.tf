@@ -18,6 +18,36 @@ variable "ghcr_password" {
   type        = string
 }
 
+variable "grafana_prometheus_url" {
+  description = "The Grafana Cloud Prometheus remote write URL"
+  type        = string
+}
+
+variable "grafana_prometheus_username" {
+  description = "The Grafana Cloud Prometheus remote write username"
+  type        = string
+}
+
+variable "grafana_prometheus_password" {
+  description = "The Grafana Cloud Prometheus remote write password"
+  type        = string
+}
+
+variable "grafana_loki_url" {
+  description = "The Grafana Cloud Loki URL"
+  type        = string
+}
+
+variable "grafana_loki_username" {
+  description = "The Grafana Cloud Loki username"
+  type        = string
+}
+
+variable "grafana_loki_password" {
+  description = "The Grafana Cloud Loki password"
+  type        = string
+}
+
 # It seems there is no zone `-a` in GCP us-east1
 # See https://cloud.google.com/compute/docs/regions-zones?hl=fr
 locals {

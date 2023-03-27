@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: flux-system
+resources:
+  # Grafana Operator
+  - grafana-operator/deployment.yaml
+  - grafana-operator/rbac.yaml
+
+  # Grafana Agent
+  - grafana-agent/agent.yaml
+  - grafana-agent/instance-log.yaml
+  - grafana-agent/instance-metrics.yaml
+  - grafana-agent/integration-event-handler.yaml
+  - grafana-agent/integration-node-exporter.yaml
+  - grafana-agent/rbac.yaml
+
+  # KSM
+  - kube-state-metrics/deployment.yaml
+  - kube-state-metrics/monitor.yaml
+  - kube-state-metrics/rbac.yaml
+  - kube-state-metrics/service.yaml
+
+  # Kubernetes monitoring
+  - monitor/cadvisor.yaml
+  - monitor/kubelet.yaml

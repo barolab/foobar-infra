@@ -142,10 +142,10 @@ resource "kubernetes_secret" "ghcr" {
 }
 
 module "cert_manager" {
-  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  name       = "cert-manager"
-  namespace  = "kube-security"
-  roles      = ["roles/dns.admin"]
+  source    = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name      = "cert-manager"
+  namespace = "kube-security"
+  roles     = ["roles/dns.admin"]
 
   gcp_sa_name = "${local.region}-cert-manager"
   project_id  = var.project
@@ -161,11 +161,19 @@ resource "kubernetes_config_map" "variables" {
   }
 
   data = {
+    gcp_cluster = module.gke.cluster_id
     gcp_project = var.project
     gcp_region  = local.region
 
     cert_manager_fqdn  = module.cert_manager.gcp_service_account_fqn
     cert_manager_email = module.cert_manager.gcp_service_account_email
+
+    grafana_prometheus_url      = var.grafana_prometheus_url
+    grafana_prometheus_username = var.grafana_prometheus_username
+    grafana_prometheus_password = var.grafana_prometheus_password
+    grafana_loki_url            = var.grafana_loki_url
+    grafana_loki_username       = var.grafana_loki_username
+    grafana_loki_password       = var.grafana_loki_password
   }
 
   lifecycle {

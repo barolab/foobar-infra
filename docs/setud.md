@@ -79,6 +79,14 @@ TF_VAR_domain="raimon.dev"
 TF_VAR_ghcr_user="XXXXXXX"
 TF_VAR_ghcr_email="XXXXXXX"
 TF_VAR_ghcr_password="XXXXXXXXXXXXXXXXXXXXXXXX"
+
+# The Grafana Cloud secrets
+TF_VAR_grafana_prometheus_url="https://XXXX/api/prom/push"
+TF_VAR_grafana_prometheus_username="XXXXXXX"
+TF_VAR_grafana_prometheus_password="XXXXXXXXXXXXXXXXXXXXXXXX"
+TF_VAR_grafana_loki_url="https://XXXX/api/prom/push"
+TF_VAR_grafana_loki_username="XXXXXXX"
+TF_VAR_grafana_loki_password="XXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
 ## Todo List

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+  namespace: kube-observability
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
+    app.kubernetes.io/component: observability
+    app.kubernetes.io/part-of: grafana
+    app.kubernetes.io/managed-by: flux
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: kube-state-metrics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/instance: kube-state-metrics
+        app.kubernetes.io/component: observability
+        app.kubernetes.io/part-of: grafana
+        app.kubernetes.io/managed-by: flux
+    spec:
+      serviceAccountName: kube-state-metrics
+      automountServiceAccountToken: true
+
+      securityContext:
+        fsGroup: 65534
+
+      containers:
+      - name: kube-state-metrics
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.5.0
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: http-metrics
+          protocol: TCP
+          containerPort: 8080
+        - name: telemetry
+          protocol: TCP
+          containerPort: 8081
+
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+
+        readinessProbe:
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          httpGet:
+            path: /
+            port: 8081
+
+        livenessProbe:
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          httpGet:
+            path: /healthz
+            port: 8080
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsGroup: 65534
+          runAsUser: 65534
+          capabilities:
+            drop:
+            - ALL
+
