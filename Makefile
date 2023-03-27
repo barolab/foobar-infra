@@ -16,6 +16,15 @@ default: help
 fmt:
 	@terraform fmt -write -recursive ./terraform
 
+## Lint all source code
+lint:
+	@docker run --rm \
+		--env-file ".github/super-linter.env" \
+		-e RUN_LOCAL=true \
+		-e USE_FIND_ALGORITHM=false \
+		-v "${PWD}":/tmp/lint \
+		github/super-linter:slim-v4
+
 ## Init the terraform modules
 tf-init: tf-init-eu tf-init-us
 
