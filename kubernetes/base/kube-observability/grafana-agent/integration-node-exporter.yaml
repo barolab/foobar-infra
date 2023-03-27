@@ -24,20 +24,20 @@ spec:
     unique: true
 
   volumeMounts:
-  - name: rootfs
-    mountPath: /host/root
-  - name: sysfs
-    mountPath: /host/sys
-  - name: procfs
-    mountPath: /host/proc
+    - name: rootfs
+      mountPath: /host/root
+    - name: sysfs
+      mountPath: /host/sys
+    - name: procfs
+      mountPath: /host/proc
 
   volumes:
-  - name: rootfs
-    hostPath:
-      path: /
-  - name: sysfs
-    hostPath:
-      path: /sys
-  - name: procfs
-    hostPath:
-      path: /proc
+    - name: rootfs
+      hostPath:
+        path: /
+    - name: sysfs
+      hostPath:
+        path: /sys
+    - name: procfs
+      hostPath:
+        path: /proc

@@ -16,4 +16,3 @@ spec:
     matchLabels:
       app.kubernetes.io/name: traefik-proxy
       app.kubernetes.io/instance: traefik-proxy
-
