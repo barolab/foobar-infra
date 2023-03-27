@@ -13,3 +13,13 @@ resources:
   - grafana-agent/integration-event-handler.yaml
   - grafana-agent/integration-node-exporter.yaml
   - grafana-agent/rbac.yaml
+
+  # KSM
+  - kube-state-metrics/deployment.yaml
+  - kube-state-metrics/monitor.yaml
+  - kube-state-metrics/rbac.yaml
+  - kube-state-metrics/service.yaml
+
+  # Kubernetes monitoring
+  - monitor/cadvisor.yaml
+  - monitor/kubelet.yaml
