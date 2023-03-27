@@ -1,4 +1,3 @@
-
 apiVersion: monitoring.grafana.com/v1alpha1
 kind: Integration
 metadata:
@@ -20,13 +19,13 @@ spec:
     logs_instance: kube-observability/grafana-agent-logs
 
   volumeMounts:
-  - name: event-handler
-    mountPath: /etc/eventhandler
+    - name: event-handler
+      mountPath: /etc/eventhandler
 
   volumes:
-  - name: event-handler
-    persistentVolumeClaim:
-      claimName: grafana-agent-event-handler
+    - name: event-handler
+      persistentVolumeClaim:
+        claimName: grafana-agent-event-handler
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -42,7 +41,7 @@ metadata:
     app.kubernetes.io/agent: grafana
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi

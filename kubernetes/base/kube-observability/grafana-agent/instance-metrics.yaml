@@ -40,11 +40,11 @@ spec:
       app.kubernetes.io/agent: grafana
 
   remoteWrite:
-  - url: "${grafana_prometheus_url}"
-    basicAuth:
-      password:
-        key: password
-        name: grafana-agent-metrics
-      username:
-        key: username
-        name: grafana-agent-metrics
+    - url: "${grafana_prometheus_url}"
+      basicAuth:
+        password:
+          key: password
+          name: grafana-agent-metrics
+        username:
+          key: username
+          name: grafana-agent-metrics

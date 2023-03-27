@@ -2,15 +2,15 @@
 
 The purpose of this repository is to answer to a challenge that was given me: Deploy a full Kubernetes platform in two different regions to host the [foobar-api](https://github.com/containous/foobar-api).
 
-* [Introduction](#introduction)
-* [Step 1 - Kubernetes Clusters](#step-1---kubernetes-clusters)
-* [Step 2 - Install Flux](#step-2---install-flux)
-* [Step 3 - Foobar API Deployment](#step-3---foobar-api-deployment)
-  * [The Docker image](#the-docker-image)
-  * [The Registry secret](#the-registry-secret)
-  * [The TLS certificate](#the-tls-certificate)
-* [Step 4 - Ingress Controller](#step-4---ingress-controller)
-* [Step 5 - DNS & TLS certificate](#step-5---dns--tls-certificates)
+- [Introduction](#introduction)
+- [Step 1 - Kubernetes Clusters](#step-1---kubernetes-clusters)
+- [Step 2 - Install Flux](#step-2---install-flux)
+- [Step 3 - Foobar API Deployment](#step-3---foobar-api-deployment)
+  - [The Docker image](#the-docker-image)
+  - [The Registry secret](#the-registry-secret)
+  - [The TLS certificate](#the-tls-certificate)
+- [Step 4 - Ingress Controller](#step-4---ingress-controller)
+- [Step 5 - DNS & TLS certificate](#step-5---dns--tls-certificates)
 
 ## Introduction
 
@@ -22,7 +22,7 @@ The first step is to make some choices regarding the infrastructure. Given the c
 The first decision made was to go with `GKE`, for a couple of reasons:
 
 1. I don't know anything about `GKE`, but I'm very curious because most comparison I saw put it in first place
-2. It seems most of the default addons are builtin, I don't have to bother with `kube-proxy` or the `CNI` for this challenge
+2. It seems most of the default addons are built-in, I don't have to bother with `kube-proxy` or the `CNI` for this challenge
 3. It's an opportunity to learn more about `GCP`
 
 I didn't want to spend too much time on deploying those resources (`GCP` or `Kubernetes`), so I decided to use tools that I'm familiar with:
@@ -37,7 +37,7 @@ Given the time frame, my schedule and my limited bank account, I will probably h
 
 The first step is to initialize the Kubernetes clusters with `GCP` and `terraform`.
 
-Let's begin by registering a [GCP account](https://console.cloud.google.com/home/dashboard), and create a project (mine is called `foobar`). Then follow the [setup documentation](./setud.md) to install the and configure the CLI tools.
+Let's begin by registering a [GCP account](https://console.cloud.google.com/home/dashboard), and create a project (mine is called `foobar`). Then follow the [setup documentation](./setud.md) to install the and configure the command-line tools.
 
 Before we start creating GKE clusters, we'll first create a GCS bucket to store our Terraform state:
 
@@ -155,7 +155,7 @@ Done ! We now have two GKE clusters in two different regions, next step will be 
 
 **Improvements**
 
-- [ ] Manage the GCP project ID a bit differently (en environment variable on a laptop is error prone)
+- [ ] Manage the GCP project ID a bit differently (en environment variable on a laptop is error-prone)
 - [ ] GitOps the Terraform modules, either with TF Cloud or Flux [terraform-controller](https://github.com/weaveworks/tf-controller)
 - [ ] Use a [GCP Service Account](https://developer.hashicorp.com/terraform/language/settings/backends/gcs#running-terraform-on-google-cloud) for Terraform
 - [ ] Check some [GCP Best Practices](https://www.whizlabs.com/blog/gcp-best-practices/)
@@ -191,20 +191,21 @@ This directory will contain more Flux `Kustomization` pointing to other director
 This will allow me to test some features like health checks and dependencies!
 
 There's a couple of things that needs to happen for Flux to be working properly:
+
 1. The namespace needs to be created, since the GKE cluster will be empty
-2. Flux will need and SSH Key Pair configured as a Deploy Key on the Github Repository
+2. Flux will need and SSH Key Pair configured as a Deploy Key on the GitHub Repository
 3. This SSH Key Pair needs to be available in a Kubernetes Secret
 4. Flux controllers will have to be deployed (only `source`, `kustomize` and `helm` for now)
 5. Flux needs the `GitRepository` and `Kustomization` resources to start reconciling resources
 
 All those steps are implemented with Terraform in the [flux module](../terraform/modules/flux/main.tf) !
 And the only thing you need to give to Terraform is an environment variable `GITHUB_TOKEN`.
-For now I'm using a Github PAT with Read/Write permissions on this repository settings, allowing
+For now I'm using a GitHub PAT with Read/Write permissions on this repository settings, allowing
 the module to add Deploy Keys.
 
 And some evidences that everything work as expected (it uses a temporary branch):
 
-![Github Deploy Keys in use](./img/step-2-flux-deploy-key.png)
+![GitHub Deploy Keys in use](./img/step-2-flux-deploy-key.png)
 
 ```sh
 $ kubectl -n flux-system get ks
@@ -222,14 +223,15 @@ podinfo   90s   True    Release reconciliation succeeded
 ```
 
 That's it for the Flux installation step, next we will:
+
 - Add the Foobar API code
 - Create a CI job to release the Foobar API Docker Image somewhere
 - Deploy it with Flux !
 
 **Improvements**
 
-- [ ] Use a Github Service Account to create the SSH deploy key
-- [ ] Find a better way than using an Environment Variable to pass the Github Token to Terraform
+- [ ] Use a GitHub Service Account to create the SSH deploy key
+- [ ] Find a better way than using an Environment Variable to pass the GitHub Token to Terraform
 
 ## Step 3 - Foobar API deployment
 
@@ -237,6 +239,7 @@ For this step the goal is to have the `foobar-api` up and running on our GKE clu
 We'll try to access it with a `kubectl port-forward` to make sure it's working properly.
 
 There's a couple of requirements to do so:
+
 1. The `foobar-api` needs to be available as a Docker Image on a Registry
 2. The GKE clusters must had access to that Registry
 3. The `foobar-api` needs a TLS certificate to boot
@@ -247,7 +250,7 @@ We won't necessarily try to have a valid TLS certificate.
 ### The Docker image
 
 For the first requirements, it's rather simple, we add the Go source code under [./app](../app/main.go),
-add a [Dockerfile](../app/Dockerfile) and setup a [Github Workflow](../.github/workflows/release.yml) to
+add a [Dockerfile](../app/Dockerfile) and setup a [GitHub Workflow](../.github/workflows/release.yml) to
 automatically release the Docker image on a push to a branch.
 
 ### The Registry Secret
@@ -255,7 +258,7 @@ automatically release the Docker image on a push to a branch.
 The Docker Image will be released on GHCR, and since we're using a private repository we need to have
 a Kubernetes Docker config secret with a Token that `kubelet` can use to pull the Docker image.
 
-For simplicity I'll use a PAT from my Github Account instead of using a Service Account, the only permissions
+For simplicity I'll use a PAT from my GitHub Account instead of using a Service Account, the only permissions
 that this token requires is `read:packages`.
 
 We'll pass that to Terraform using the ENV variable, and since we're adding more and more variables to those
@@ -288,7 +291,7 @@ $ openssl req -nodes -new -x509 \
 $ docker run --rm \
   -p 8080:80 \
   -v "$(pwd)/cert:/cert" \
-	ghcr.io/barolab/foobar-api:latest
+  ghcr.io/barolab/foobar-api:latest
 Starting up on port 80
 ```
 
@@ -311,6 +314,7 @@ Apart from the `-k` option, it seems it's working fine!
 ### Kubernetes Deployment
 
 And now for the Kubernetes part, we'll need:
+
 - a [PersistentVolumeClaim](../kubernetes/base/foobar/foobar-api/pvc.yml)
 - a [Deployment](../kubernetes/base/foobar/foobar-api/deployment.yml)
 - a [Service](../kubernetes/base/foobar/foobar-api/service.yml)
@@ -318,6 +322,7 @@ And now for the Kubernetes part, we'll need:
 Since GKE only supports `ReadWriteOnce` PV out of the box, we'll stick with this.
 
 his add two constraints to our `Deployment`:
+
 1. We can have only one replica at a time
 2. We have to use the `Recreate` strategy
 
@@ -325,16 +330,16 @@ Another solution would be to use a `StatefulSet`, but that would mean each repli
 a different certificate, which is not intended for now.
 
 Then using Flux & Kustomize, we're only a couple of files away from deploying this to GKE:
+
 - [eu-west9](../kubernetes/production/eu-west9/foobar/kustomization.yaml)
 - [us-east1](../kubernetes/production/us-east1/foobar/kustomization.yaml)
 
 **Improvements**
 
-- [x] A better release process for the Docker Image, based on Github releases rather than push to any branch ([PR#7](https://github.com/barolab/foobar-infra/pull/7))
+- [x] A better release process for the Docker Image, based on GitHub releases rather than push to any branch ([PR#7](https://github.com/barolab/foobar-infra/pull/7))
 - [ ] Something to automate the Kubernetes Docker config deployment (SealedSecrets / External Secrets, Kyverno, etc...)
-- [ ] Docker image should *NOT* run as root (and Kubernetes Security Context should be set accordingly)
+- [ ] Docker image should _NOT_ run as root (and Kubernetes Security Context should be set accordingly)
 - [ ] Use a `StatefulSet` and change the InitContainer to get the certificate from a backend service (like Vault)
-
 
 ## Step 4 - Ingress Controller
 
@@ -342,6 +347,7 @@ Once our `foobar-api` is up and running, we can start thinking about exposing it
 For this we're going to use Traefik Proxy with GKE Load Balancers.
 
 Just like with the `foobar-api` we're going to use a Kustomize base referenced in each regions:
+
 - [Traefik Base](/kubernetes/base/kube-network/kustomization.yaml)
 - [Europe Kustomization](/kubernetes/production/eu-west9/flux-system/kube-network.yml)
 - [Europe Overlay](/kubernetes/production/eu-west9/kube-network/kustomization.yaml)
@@ -365,8 +371,8 @@ The CRDs have been properly reconciled, so `kube-network` (where Traefik is depl
 But `foobar` needs `kube-network` in order to work (for the `Ingress` resource), and so Flux waits for the
 dependency to be ready.
 
-
 And all Kustomizations are Ready, we have our Traefik PODs, and a Load Balancer with a public IP:
+
 ```sh
 $ kubectl -n kube-network get pods
 NAME                             READY   STATUS    RESTARTS   AGE
@@ -404,13 +410,13 @@ $ curl -v http://api.raimon.dev/foobar --resolve "api.raimon.dev:80:34.155.XXX.X
 < Content-Type: text/plain; charset=utf-8
 <
 * Connection #0 to host api.raimon.dev left intact
-Internal Server Error%
+Internal Server Error
 ```
 
 Bummer, there's an error somewhere in the stack. The first thing we want to validate is whether or not
 the HTTP request reached our `foobar-api` service:
 
-```
+```sh
 $ kubectl -n foobar logs -f deploy/foobar-api
 ...
 2023/03/26 09:20:52 http: TLS handshake error from 192.168.1.13:42042: remote error: tls: bad certificate
@@ -463,7 +469,6 @@ Skipping certificate validation is not ideal though, we'll have to try and use c
 **Improvements**
 
 - [ ] Use a private authority to sign certificates that will be valid for both `foobar-api` and `traefik-proxy` (and remove [this flag](https://github.com/barolab/foobar-infra/pull/11/files#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R71))
-
 
 ## Step 5 - DNS & TLS Certificates
 
@@ -583,8 +588,8 @@ Events:
 
 We're one step away from having a secured, public endpoint for our API. We just configure Traefik to set TLS on 443 and force the redirection from 80 to 443! (see the [PR#12](https://github.com/barolab/foobar-infra/pull/12/commits/a508341fe6edc4d92fbd901635e5c498cff170f1#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R56))
 
-
 Let's try both in one command:
+
 ```sh
 $ curl -vL http://api.raimon.dev/foobar
 * Connected to api.raimon.dev (34.163.106.236) port 80 (#0)
@@ -609,7 +614,6 @@ Hostname: foobar-api-57d8d7f68c-pzn5p
 ```
 
 Our Foobar API is now publicly available, with regional DNS resolution and a valid TLS certificate ! The next step will be to make it a bit more resilient to outages.
-
 
 **Improvements**
 

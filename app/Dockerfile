@@ -13,7 +13,8 @@ RUN go build -o /foobar-api
 FROM alpine:3.9
 
 WORKDIR /
-RUN apk add ca-certificates
+RUN apk add ca-certificates=20191127-r2 --no-cache &&  \
+    rm -rf /var/cache/apk/*
 COPY --from=build /foobar-api /app
 
 EXPOSE 80

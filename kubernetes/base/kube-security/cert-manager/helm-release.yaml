@@ -49,7 +49,7 @@ spec:
       readOnlyRootFilesystem: true
       capabilities:
         drop:
-        - ALL
+          - ALL
 
     webhook:
       enabled: true
@@ -69,7 +69,7 @@ spec:
         readOnlyRootFilesystem: true
         capabilities:
           drop:
-          - ALL
+            - ALL
 
     cainjector:
       enabled: true
@@ -89,7 +89,7 @@ spec:
         readOnlyRootFilesystem: true
         capabilities:
           drop:
-          - ALL
+            - ALL
 
     prometheus:
       enabled: false

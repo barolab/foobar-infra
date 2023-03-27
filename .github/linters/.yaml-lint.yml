@@ -1,0 +1,49 @@
+---
+# Based on ansible-lint config
+extends: default
+
+ignore: |
+  .github/
+  docs/
+  app/
+  terraform/
+  kubernetes/base/crds/
+
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+  - .yamllint
+
+rules:
+  braces:
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    max-spaces-inside: 1
+    level: error
+  colons:
+    max-spaces-after: -1
+    level: error
+  commas:
+    max-spaces-after: -1
+    level: error
+  hyphens:
+    level: error
+  indentation: enable
+  key-duplicates: enable
+  new-line-at-end-of-file: enable
+  new-lines:
+    type: unix
+
+  comments: disable
+  comments-indentation: disable
+  document-end: disable
+  document-start: disable
+  empty-lines: disable
+  empty-values: disable
+  key-ordering: disable
+  line-length: disable
+  octal-values: disable
+  quoted-strings: disable
+  trailing-spaces: disable
+  truthy: disable

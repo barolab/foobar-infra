@@ -3,7 +3,7 @@
 This documentation will help you get started with all the tooling & stuff required to interact with this repository.
 I tried to make it as simple as it can be, but still, there's still a couple of manual things.
 
-## CLI tools
+## Command-line tools
 
 This repository uses multiple tools to provision and maintain all the infrastructure resources.
 To manage all of them, I suggest to use [asdf](https://asdf-vm.com/).

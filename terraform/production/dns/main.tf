@@ -36,12 +36,12 @@ resource "google_dns_record_set" "api" {
 
   routing_policy {
     wrr {
-      weight   = 0.5
-      rrdatas  = [local.proxy_eu_ip]
+      weight  = 0.5
+      rrdatas = [local.proxy_eu_ip]
     }
     wrr {
-      weight   = 0.5
-      rrdatas  = [local.proxy_us_ip]
+      weight  = 0.5
+      rrdatas = [local.proxy_us_ip]
     }
   }
 }

@@ -35,18 +35,18 @@ spec:
       app.kubernetes.io/agent: grafana
 
   clients:
-  - url: "${grafana_loki_url}"
-    basicAuth:
-      password:
-        key: password
-        name: grafana-agent-logs
-      username:
-        key: username
-        name: grafana-agent-logs
-    externalLabels:
-      cluster: ${gcp_cluster}
-      project: ${gcp_project}
-      region: ${gcp_region}
+    - url: "${grafana_loki_url}"
+      basicAuth:
+        password:
+          key: password
+          name: grafana-agent-logs
+        username:
+          key: username
+          name: grafana-agent-logs
+      externalLabels:
+        cluster: ${gcp_cluster}
+        project: ${gcp_project}
+        region: ${gcp_region}
 ---
 apiVersion: monitoring.grafana.com/v1alpha1
 kind: PodLogs
@@ -64,30 +64,30 @@ spec:
   namespaceSelector:
     any: true
   pipelineStages:
-  - cri: {}
+    - cri: {}
   relabelings:
-  - sourceLabels:
-    - __meta_kubernetes_pod_node_name
-    targetLabel: __host__
-  - action: labelmap
-    regex: __meta_kubernetes_pod_label_(.+)
-  - action: replace
-    sourceLabels:
-    - __meta_kubernetes_namespace
-    targetLabel: namespace
-  - action: replace
-    sourceLabels:
-    - __meta_kubernetes_pod_name
-    targetLabel: pod
-  - action: replace
-    sourceLabels:
-    - __meta_kubernetes_container_name
-    targetLabel: container
-  - replacement: /var/log/pods/*$1/*.log
-    separator: /
-    sourceLabels:
-    - __meta_kubernetes_pod_uid
-    - __meta_kubernetes_pod_container_name
-    targetLabel: __path__
+    - sourceLabels:
+        - __meta_kubernetes_pod_node_name
+      targetLabel: __host__
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - action: replace
+      sourceLabels:
+        - __meta_kubernetes_namespace
+      targetLabel: namespace
+    - action: replace
+      sourceLabels:
+        - __meta_kubernetes_pod_name
+      targetLabel: pod
+    - action: replace
+      sourceLabels:
+        - __meta_kubernetes_container_name
+      targetLabel: container
+    - replacement: /var/log/pods/*$1/*.log
+      separator: /
+      sourceLabels:
+        - __meta_kubernetes_pod_uid
+        - __meta_kubernetes_pod_container_name
+      targetLabel: __path__
   selector:
     matchLabels: {}
