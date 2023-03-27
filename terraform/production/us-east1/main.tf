@@ -162,7 +162,7 @@ resource "kubernetes_config_map" "variables" {
 
   data = {
     gcp_project = var.project
-    gcp_region  = var.region
+    gcp_region  = local.region
 
     cert_manager_fqdn  = module.cert_manager.gcp_service_account_fqn
     cert_manager_email = module.cert_manager.gcp_service_account_email
