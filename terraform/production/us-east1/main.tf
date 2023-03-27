@@ -142,10 +142,10 @@ resource "kubernetes_secret" "ghcr" {
 }
 
 module "cert_manager" {
-  source     = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  name       = "cert-manager"
-  namespace  = "kube-security"
-  roles      = ["roles/dns.admin"]
+  source    = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+  name      = "cert-manager"
+  namespace = "kube-security"
+  roles     = ["roles/dns.admin"]
 
   gcp_sa_name = "${local.region}-cert-manager"
   project_id  = var.project

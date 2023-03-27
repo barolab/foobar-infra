@@ -23,7 +23,7 @@ output "kubernetes" {
 }
 
 output "cert_manager" {
-  sensitive = true
+  sensitive   = true
   description = "Destails about the Cert Manager service account"
-  value = module.cert_manager
+  value       = module.cert_manager
 }
