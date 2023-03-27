@@ -1,0 +1,24 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: kube-observability
+  namespace: flux-system
+spec:
+  path: "./kubernetes/production/us-east1/kube-observability"
+  prune: true
+  interval: 10m
+  targetNamespace: kube-observability
+  sourceRef:
+    kind: GitRepository
+    name: foobar-infra
+  dependsOn:
+    - name: crds
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: grafana-agent-operator
+      namespace: kube-observability
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-variables
