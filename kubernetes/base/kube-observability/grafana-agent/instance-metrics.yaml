@@ -11,8 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: flux
     app.kubernetes.io/agent: grafana
 type: Opaque
-data: {}
-stringData:
+data:
   password: "${grafana_prometheus_password}"
   username: "${grafana_prometheus_username}"
 ---
