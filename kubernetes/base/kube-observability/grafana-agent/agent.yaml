@@ -18,10 +18,6 @@ spec:
         app.kubernetes.io/agent: grafana
 
   logs:
-    externalLabels:
-      cluster: ${gcp_cluster}
-      project: ${gcp_project}
-      region: ${gcp_region}
     instanceSelector:
       matchLabels:
         app.kubernetes.io/agent: grafana

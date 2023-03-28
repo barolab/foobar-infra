@@ -169,11 +169,11 @@ resource "kubernetes_config_map" "variables" {
     cert_manager_email = module.cert_manager.gcp_service_account_email
 
     grafana_prometheus_url      = var.grafana_prometheus_url
-    grafana_prometheus_username = var.grafana_prometheus_username
-    grafana_prometheus_password = var.grafana_prometheus_password
+    grafana_prometheus_username = base64encode(var.grafana_prometheus_username)
+    grafana_prometheus_password = base64encode(var.grafana_prometheus_password)
     grafana_loki_url            = var.grafana_loki_url
-    grafana_loki_username       = var.grafana_loki_username
-    grafana_loki_password       = var.grafana_loki_password
+    grafana_loki_username       = base64encode(var.grafana_loki_username)
+    grafana_loki_password       = base64encode(var.grafana_loki_password)
   }
 
   lifecycle {

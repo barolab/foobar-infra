@@ -4,6 +4,7 @@ namespace: flux-system
 resources:
   - traefik-proxy/deployment.yaml
   - traefik-proxy/ingress-class.yaml
+  - traefik-proxy/monitor.yaml
   - traefik-proxy/pdb.yaml
   - traefik-proxy/rbac.yaml
   - traefik-proxy/service-api.yaml

@@ -65,11 +65,26 @@ spec:
               cpu: 100m
 
           readinessProbe:
-            tcpSocket:
+            initialDelaySeconds: 2
+            failureThreshold: 1
+            successThreshold: 1
+            timeoutSeconds: 2
+            periodSeconds: 10
+            httpGet:
+              path: /health
               port: 80
+              scheme: HTTPS
+
           livenessProbe:
-            tcpSocket:
+            initialDelaySeconds: 2
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 2
+            periodSeconds: 10
+            httpGet:
+              path: /health
               port: 80
+              scheme: HTTPS
 
           volumeMounts:
             - name: cert

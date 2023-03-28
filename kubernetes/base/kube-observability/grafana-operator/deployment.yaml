@@ -35,7 +35,7 @@ spec:
             - --kubelet-service=default/kubelet
 
           ports:
-            - name: http-metrics
+            - name: metrics
               protocol: TCP
               containerPort: 8080
 
