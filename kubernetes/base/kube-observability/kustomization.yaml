@@ -4,7 +4,9 @@ namespace: flux-system
 resources:
   # Grafana Operator
   - grafana-operator/deployment.yaml
+  - grafana-operator/monitor.yaml
   - grafana-operator/rbac.yaml
+  - grafana-operator/service.yaml
 
   # Grafana Agent
   - grafana-agent/agent.yaml
