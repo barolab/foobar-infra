@@ -10,8 +10,8 @@ ignore: |
   kubernetes/base/crds/
 
 yaml-files:
-  - '*.yaml'
-  - '*.yml'
+  - "*.yaml"
+  - "*.yml"
   - .yamllint
 
 rules:
@@ -35,10 +35,13 @@ rules:
   new-lines:
     type: unix
 
+  document-start:
+    present: false
+  document-end:
+    present: false
+
   comments: disable
   comments-indentation: disable
-  document-end: disable
-  document-start: disable
   empty-lines: disable
   empty-values: disable
   key-ordering: disable
@@ -46,4 +49,3 @@ rules:
   octal-values: disable
   quoted-strings: disable
   trailing-spaces: disable
-  truthy: disable
