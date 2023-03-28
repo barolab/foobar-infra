@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: traefik-propxy
+  namespace: kube-network
+  labels:
+    app.kubernetes.io/name: traefik-proxy
+    app.kubernetes.io/instance: traefik-proxy
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: traefik
+    app.kubernetes.io/managed-by: flux
+    app.kubernetes.io/agent: grafana
+spec:
+  namespaceSelector:
+    matchNames:
+      - kube-network
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: traefik-proxy
+      app.kubernetes.io/instance: traefik-proxy-api
+
+  endpoints:
+    - path: /metrics
+      port: metrics

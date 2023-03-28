@@ -92,4 +92,8 @@ spec:
             - ALL
 
     prometheus:
-      enabled: false
+      enabled: true
+      servicemonitor:
+        enabled: true
+        labels:
+          app.kubernetes.io/agent: grafana
