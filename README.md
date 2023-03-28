@@ -2,6 +2,8 @@
 
 A set of Google Cloud Project and Kubernetes resources to deploy the [foobar-api](https://github.com/containous/foobar-api).
 
+[![GitHub Super-Linter](https://github.com/barolab/foobar-infra/workflows/lint/badge.svg)](https://github.com/marketplace/actions/super-linter)
+
 ## Getting Started
 
 A `Makefile` is at your disposal to interact with the repository:
@@ -12,6 +14,7 @@ Usage:
 
 Targets:
   fmt             Format the Terraform code
+  lint            Lint all source code
   tf-init         Init the terraform modules
   tf-init-eu      Init the terraform GKE module (EU)
   tf-init-us      Init the terraform GKE module (US)
