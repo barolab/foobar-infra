@@ -93,6 +93,6 @@ TF_VAR_grafana_loki_password="XXXXXXXXXXXXXXXXXXXXXXXX"
 
 Because there's always room for improvements !
 
-[ ] Linter & Formatter automation
+[x] Linter & Formatter automation (see [PR#18](https://github.com/barolab/foobar-infra/pull/18))
 [ ] Find an alternative to change `$PATH` for the [gke-gcloud-auth-plugin](./docs/setud.md#environments-variables) binary
 [ ] Use `gcloud config configurations` to set the project ID and pass it down to `terraform` (see the [CLI documentation](https://cloud.google.com/sdk/gcloud/reference/config/configurations))
