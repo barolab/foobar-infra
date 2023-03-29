@@ -65,7 +65,8 @@ spec:
             - --metrics.prometheus=true
             - --ping=true
             - --providers.kubernetescrd
-            - --providers.kubernetescrd.ingressclass=traefik-proxy
+            - --providers.kubernetescrd.allowcrossnamespace=true
+            - --providers.kubernetescrd.allowexternalnameservices=true
             - --providers.kubernetesingress
             - --providers.kubernetesingress.ingressclass=traefik-proxy
             - --providers.kubernetesingress.ingressendpoint.publishedservice=kube-network/traefik-proxy-lb
@@ -129,15 +130,3 @@ spec:
             capabilities:
               drop:
                 - ALL
-
-          volumeMounts:
-            - name: data
-              mountPath: /data
-            - name: tmp
-              mountPath: /tmp
-
-      volumes:
-        - name: data
-          emptyDir: {}
-        - name: tmp
-          emptyDir: {}
