@@ -21,6 +21,9 @@ resources:
   - cert-manager/issuers.yaml
   - cert-manager/orders.yaml
 
+  # Trust Manager
+  - trust-manager/bundles.yaml
+
   # Grafana Agent
   - grafana/agents.yaml
   - grafana/integrations.yaml
