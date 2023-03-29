@@ -1,0 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: foobar-api
+  namespace: foobar
+spec:
+  isCA: false
+  duration: 2160h
+  renewBefore: 360h
+  secretName: foobar-api-cert
+  commonName: api.raimon.dev
+
+  subject:
+    organizations:
+      - foobar
+  dnsNames:
+    - foobar-api.foobar
+    - foobar-api.foobar.svc
+    - foobar-api.foobar.svc.cluster.local
+
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+
+  issuerRef:
+    name: raimon
+    kind: ClusterIssuer
+    group: cert-manager.io
