@@ -65,6 +65,11 @@ func main() {
 		Addr: ":" + port,
 	}
 
+	// If a CA is present, load it
+	if _, err := os.Stat("/cert/ca.pem"); err != nil {
+		server.TLSConfig = setupMutualTLS("/cert/ca.pem")
+	}
+
 	_, err := os.Stat("/cert/cert.pem")
 	if err != nil {
 		log.Fatal("You need to provide a certificate")
