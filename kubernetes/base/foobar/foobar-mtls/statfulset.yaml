@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: foobar-mtls
+  namespace: foobar
+  labels:
+    app.kubernetes.io/name: foobar-mtls
+    app.kubernetes.io/instance: foobar-mtls
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: foobar
+    app.kubernetes.io/managed-by: flux
+spec:
+  replicas: 2
+  serviceName: foobar-mtls
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: foobar-mtls
+      app.kubernetes.io/instance: foobar-mtls
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: foobar-mtls
+        app.kubernetes.io/instance: foobar-mtls
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: foobar
+        app.kubernetes.io/managed-by: flux
+    spec:
+      securityContext:
+        fsGroup: 65532
+      imagePullSecrets:
+        - name: ghcr
+      initContainers:
+        - name: copy-certs
+          image: busybox:1.28
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - "cp /client/ca.crt /cache/ca.pem && cp /server/tls.crt /cache/cert.pem && cp /server/tls.key /cache/key.pem"
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsGroup: 65532
+            runAsUser: 65532
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tls-server
+              mountPath: /server
+              readOnly: true
+            - name: tls-client
+              mountPath: /client
+              readOnly: true
+            - name: tls-cache
+              mountPath: /cache
+              readOnly: false
+
+      containers:
+        - name: foobar-mtls
+          image: ghcr.io/barolab/foobar-api:0.1.2
+
+          ports:
+            - name: https
+              protocol: TCP
+              containerPort: 80
+
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 100m
+            limits:
+              memory: 32Mi
+              cpu: 100m
+
+          readinessProbe:
+            tcpSocket:
+              port: 80
+
+          livenessProbe:
+            tcpSocket:
+              port: 80
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsGroup: 65532
+            runAsUser: 65532
+            capabilities:
+              drop: [ALL]
+              add: [NET_BIND_SERVICE]
+
+          volumeMounts:
+            - name: tls-cache
+              mountPath: /cert
+              readOnly: true
+
+      volumes:
+        - name: tls-server
+          secret:
+            secretName: foobar-mtls-server
+        - name: tls-client
+          secret:
+            secretName: foobar-mtls-client
+
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: tls-cache
+      spec:
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

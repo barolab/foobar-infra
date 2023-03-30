@@ -13,12 +13,31 @@ spec:
     name: foobar-infra
   dependsOn:
     - name: crds
-  healthChecks:
-    - apiVersion: apps/v1
-      kind: Deployment
-      name: cert-manager
-      namespace: kube-security
   postBuild:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-variables
+  healthChecks:
+    # Cert Manager is UP and Running
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: cert-manager
+      namespace: kube-security
+
+    # Trust Manager is UP and Running
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: trust-manager
+      namespace: kube-security
+
+    # Our self signed Certificate Authority is here
+    - apiVersion: v1
+      kind: Secret
+      name: raimon-ca
+      namespace: kube-security
+
+    # Our CA Bundle is ready
+    - apiVersion: v1
+      kind: ConfigMap
+      name: raimon-ca
+      namespace: kube-security

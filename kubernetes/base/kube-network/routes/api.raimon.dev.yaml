@@ -1,0 +1,48 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: api.raimon.dev
+  namespace: kube-network
+spec:
+  secretName: tls-api-raimon-dev
+  dnsNames:
+    - api.raimon.dev
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: api.raimon.dev
+  namespace: kube-network
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`api.raimon.dev`) && PathPrefix(`/foobar`)
+      services:
+        - kind: Service
+          name: foobar-api
+          namespace: foobar
+          port: 80
+          scheme: https
+          serversTransport: foobar-api
+
+    - kind: Rule
+      match: Host(`api.raimon.dev`) && PathPrefix(`/mtls`)
+      services:
+        - kind: Service
+          name: foobar-mtls
+          namespace: foobar
+          port: 80
+          scheme: https
+          serversTransport: foobar-mtls
+
+  tls:
+    secretName: tls-api-raimon-dev
+    options:
+      name: raimon
+      namespace: kube-security

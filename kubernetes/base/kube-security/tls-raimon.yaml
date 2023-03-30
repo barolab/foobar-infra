@@ -1,0 +1,62 @@
+# Create a self sign issuer to generate a certificate to act as an authority
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: raimon-ca
+  namespace: kube-security
+spec:
+  selfSigned: {}
+---
+# Generate a certificate to act as authority
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: raimon-ca
+  namespace: kube-security
+spec:
+  isCA: true
+  commonName: raimon.dev
+  secretName: raimon-ca
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: raimon-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Bundle our certificate authority with other authorities into a single .pem file
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: raimon-ca
+spec:
+  sources:
+    - useDefaultCAs: true
+    - secret:
+        name: raimon-ca
+        key: tls.crt
+  target:
+    configMap:
+      key: ca.crt
+---
+# Create an issuer based on our authority
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: raimon
+spec:
+  ca:
+    secretName: raimon-ca
+---
+# Create a TLS Option for Traefik to validate raimon's certs when given
+apiVersion: traefik.containo.us/v1alpha1
+kind: TLSOption
+metadata:
+  name: raimon
+  namespace: kube-security
+spec:
+  clientAuth:
+    clientAuthType: VerifyClientCertIfGiven
+    secretNames:
+      - raimon-ca

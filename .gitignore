@@ -13,3 +13,6 @@ temp/
 # DOTENV
 .env
 *.pem
+
+# Client certificates
+certs/

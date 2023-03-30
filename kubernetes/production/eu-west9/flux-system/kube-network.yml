@@ -13,6 +13,7 @@ spec:
     name: foobar-infra
   dependsOn:
     - name: crds
+    - name: kube-security
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment

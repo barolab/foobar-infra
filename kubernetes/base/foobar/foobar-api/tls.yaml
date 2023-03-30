@@ -1,0 +1,41 @@
+# Create a TLS certificate that Foobar API will use to serve over HTTPS
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: foobar-api-server
+  namespace: foobar
+spec:
+  isCA: false
+  duration: 2160h
+  renewBefore: 360h
+  secretName: foobar-api-server
+  commonName: foobar-api.foobar.svc.cluster.local
+  subject:
+    organizations:
+      - foobar
+  dnsNames:
+    - foobar-api.foobar
+    - foobar-api.foobar.svc
+    - foobar-api.foobar.svc.cluster.local
+
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: raimon
+---
+# Create a Traefik configuration to load the self-signed CA of the certificate created above
+apiVersion: traefik.containo.us/v1alpha1
+kind: ServersTransport
+metadata:
+  name: foobar-api
+  namespace: foobar
+spec:
+  serverName: foobar-api.foobar.svc.cluster.local
+  insecureSkipVerify: false
+  rootCAsSecrets:
+    - foobar-api-server

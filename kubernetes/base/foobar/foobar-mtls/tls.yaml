@@ -1,0 +1,72 @@
+# Create a TLS certificate that Foobar API will use to serve over HTTPS
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: foobar-mtls-server
+  namespace: foobar
+spec:
+  isCA: false
+  duration: 2160h
+  renewBefore: 360h
+  secretName: foobar-mtls-server
+  commonName: foobar-mtls.foobar.svc.cluster.local
+  subject:
+    organizations:
+      - foobar
+  dnsNames:
+    - foobar-mtls.foobar
+    - foobar-mtls.foobar.svc
+    - foobar-mtls.foobar.svc.cluster.local
+
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: raimon
+---
+# Create a TLS certificate to authenticate Foobar API Client (mTLS)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: foobar-mtls-client
+  namespace: foobar
+spec:
+  isCA: false
+  duration: 2160h
+  renewBefore: 360h
+  secretName: foobar-mtls-client
+  commonName: netshoot.foobar.svc.cluster.local
+  subject:
+    organizations:
+      - foobar
+  dnsNames:
+    - netshoot
+    - netshoot.foobar
+    - netshoot.foobar.svc
+    - netshoot.foobar.svc.cluster.local
+
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: raimon
+---
+# Create a Traefik configuration to load the self-signed CA of the certificate created above
+apiVersion: traefik.containo.us/v1alpha1
+kind: ServersTransport
+metadata:
+  name: foobar-mtls
+  namespace: foobar
+spec:
+  serverName: foobar-mtls.foobar.svc.cluster.local
+  insecureSkipVerify: false
+  rootCAsSecrets:
+    - foobar-mtls-server

@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: foobar-api
   namespace: foobar
@@ -10,9 +10,10 @@ metadata:
     app.kubernetes.io/part-of: foobar
     app.kubernetes.io/managed-by: flux
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: 2
+  serviceName: foobar-api
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app.kubernetes.io/name: foobar-api
@@ -29,28 +30,24 @@ spec:
       imagePullSecrets:
         - name: ghcr
       initContainers:
-        - name: cert-gen
-          image: alpine/openssl
+        - name: copy-certs
+          image: busybox:1.28
+          command: ["/bin/sh"]
           args:
-            - req
-            - -nodes
-            - -new
-            - -x509
-            - -keyout
-            - /cert/key.pem
-            - -out
-            - /cert/cert.pem
-            - -subj
-            - "/C=FR/ST=France/L=Nantes/O=Dis/CN=foobar.raimon.dev"
+            - -c
+            - "cp /certs/tls.crt /cache/cert.pem && cp /certs/tls.key /cache/key.pem"
 
           volumeMounts:
-            - name: cert
-              mountPath: /cert
+            - name: tls-certs
+              mountPath: /certs
+              readOnly: true
+            - name: tls-cache
+              mountPath: /cache
               readOnly: false
 
       containers:
         - name: foobar-api
-          image: ghcr.io/barolab/foobar-api:main
+          image: ghcr.io/barolab/foobar-api:0.1.2
           ports:
             - name: https
               protocol: TCP
@@ -65,33 +62,32 @@ spec:
               cpu: 100m
 
           readinessProbe:
-            initialDelaySeconds: 2
-            failureThreshold: 1
-            successThreshold: 1
-            timeoutSeconds: 2
-            periodSeconds: 10
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 80
-              scheme: HTTPS
 
           livenessProbe:
-            initialDelaySeconds: 2
-            failureThreshold: 3
-            successThreshold: 1
-            timeoutSeconds: 2
-            periodSeconds: 10
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 80
-              scheme: HTTPS
 
           volumeMounts:
-            - name: cert
+            - name: tls-cache
               mountPath: /cert
               readOnly: true
 
       volumes:
-        - name: cert
-          persistentVolumeClaim:
-            claimName: foobar-api-cert
+        - name: tls-certs
+          secret:
+            secretName: foobar-api-server
+
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: tls-cache
+      spec:
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

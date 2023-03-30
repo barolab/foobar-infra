@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: foobar-mtls
+  namespace: foobar
+  labels:
+    app.kubernetes.io/name: foobar-mtls
+    app.kubernetes.io/instance: foobar-mtls
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: foobar
+    app.kubernetes.io/managed-by: flux
+spec:
+  type: ClusterIP
+  ports:
+    - name: https
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app.kubernetes.io/name: foobar-mtls
+    app.kubernetes.io/instance: foobar-mtls

@@ -5,7 +5,11 @@ metadata:
 spec:
   acme:
     email: "${cert_manager_email}"
-    server: https://acme-v02.api.letsencrypt.org/directory
+    # Production URL
+    # server: https://acme-v02.api.letsencrypt.org/directory
+    # Staging URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+
     privateKeySecretRef:
       name: letsencrypt-issuer-account-key
     solvers:
