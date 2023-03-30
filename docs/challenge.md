@@ -638,3 +638,20 @@ Right after creating the account, you should be able to launch Grafana, click on
 This will open a guide on how to setup Grafana Cloud on Kubernetes. Inside the manifests you should find you Prometheus remote write URL and credentials, and the same for your Loki instance. Set the variables in your `.dotenv` like shown in the [setup doc](/docs/setud.md) and apply the Terraform modules to deploy them in the Flux variables `ConfigMap`.
 
 You should now start to see clusters in your Grafana Cloud account! For now there's nothing fancy, just the basic Kubernetes monitoring (enough to get started).
+
+### TLS validation & mTLS
+
+While looking at the source code of the `foobar-api` I noticed this small but interesting function called [setupMutualTLS](https://github.com/barolab/foobar-infra/blob/5c2abbc71d208c9ff73dcf0b93c798880174bb52/app/main.go#L85). The strange thing about this function is that it's call nowhere in the source code.
+
+My knowledge in mutual TLS is a bit light and so I wanted to dig a bit more to understand better. In order to make that work we need:
+
+1. A Certificate Authority
+2. A TLS Key/Pair for the server
+3. A TLS Key/Pair for the client
+4. Update our `foobar-api` to enable mTLS if a CA is given (see [PR#26](https://github.com/barolab/foobar-infra/pull/26))
+
+The overall idea is to tell the client (like `curl`) to use a TLS key/pair to authenticate to the server. Both the server and the clients can accepts certificates distributed by our authority.
+
+In this scenario, my understanding is that the proxy (here Traefik), doesn't take part in the mutual TLS authentication between the client and the server. Thought it can filter any client certificates who are not signed by the given authority.
+
+This definitely got harder than expected (see [PR#25](https://github.com/barolab/foobar-infra/pull/25)) even though I was able to remove [this security flaw](https://github.com/barolab/foobar-infra/blob/5c2abbc71d208c9ff73dcf0b93c798880174bb52/kubernetes/base/kube-network/traefik-proxy/deployment.yaml#L72) from the Traefik configuration along the way.
