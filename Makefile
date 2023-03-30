@@ -85,16 +85,17 @@ kube-init-us:
 
 ## Get the client certificate from the foobar namespace
 get-client-cert:
-	@kubectl get configmap raimon-ca -o jsonpath='{.data.ca\.crt}' > "${PWD}/certs/ca.crt"
-	@kubectl -n foobar get secret foobar-api-client -o jsonpath='{.data.tls\.crt}' | base64 --decode > "${PWD}/certs/client.crt"
-	@kubectl -n foobar get secret foobar-api-client -o jsonpath='{.data.tls\.key}' | base64 --decode > "${PWD}/certs/client.key"
+	@mkdir -p "${PWD}/certs/"
+	@kubectl -n foobar get secret foobar-mtls-client -o jsonpath='{.data.ca\.crt}' | base64 --decode > "${PWD}/certs/ca.crt"
+	@kubectl -n foobar get secret foobar-mtls-client -o jsonpath='{.data.tls\.crt}' | base64 --decode > "${PWD}/certs/tls.crt"
+	@kubectl -n foobar get secret foobar-mtls-client -o jsonpath='{.data.tls\.key}' | base64 --decode > "${PWD}/certs/tls.key"
 
 ## Send an HTTP request to foobar using mtls
 get-mtls:
-	@curl \
+	curl \
 		--cacert "${PWD}/certs/ca.crt" \
-		--cert "${PWD}/certs/client.crt" \
-		--key "${PWD}/certs/client.key" \
+		--cert "${PWD}/certs/tls.crt" \
+		--key "${PWD}/certs/tls.key" \
 		-v https://api.raimon.dev/mtls
 
 ## Print this help message

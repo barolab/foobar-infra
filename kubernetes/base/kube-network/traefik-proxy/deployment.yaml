@@ -70,10 +70,6 @@ spec:
             - --providers.kubernetesingress
             - --providers.kubernetesingress.ingressclass=traefik-proxy
             - --providers.kubernetesingress.ingressendpoint.publishedservice=kube-network/traefik-proxy-lb
-            - --providers.file.directory=/config
-            # To be removed once Backend services use valid certificates
-            - --serverstransport.insecureSkipVerify=true
-            - --serverstransport.rootcas=/certs/ca.crt
 
           ports:
             - name: metrics
@@ -132,19 +128,3 @@ spec:
             capabilities:
               drop:
                 - ALL
-
-          volumeMounts:
-            - name: config
-              readOnly: true
-              mountPath: /config
-            - name: raimon-ca
-              readOnly: true
-              mountPath: /certs
-
-      volumes:
-        - name: config
-          configMap:
-            name: traefik-proxy
-        - name: raimon-ca
-          configMap:
-            name: raimon-ca

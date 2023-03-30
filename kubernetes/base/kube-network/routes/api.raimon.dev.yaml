@@ -29,6 +29,7 @@ spec:
           namespace: foobar
           port: 80
           scheme: https
+          serversTransport: foobar-api
 
     - kind: Rule
       match: Host(`api.raimon.dev`) && PathPrefix(`/mtls`)
@@ -38,7 +39,10 @@ spec:
           namespace: foobar
           port: 80
           scheme: https
+          serversTransport: foobar-mtls
 
-  # Serve the Let's Encrypt certificate
   tls:
     secretName: tls-api-raimon-dev
+    options:
+      name: raimon
+      namespace: kube-security

@@ -8,6 +8,5 @@ resources:
   - traefik-proxy/monitor.yaml
   - traefik-proxy/pdb.yaml
   - traefik-proxy/rbac.yaml
-  - traefik-proxy/service-api.yaml
-  - traefik-proxy/service-lb.yaml
+  - traefik-proxy/services.yaml
   - routes/api.raimon.dev.yaml

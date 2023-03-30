@@ -4,6 +4,7 @@ namespace: foobar
 resources:
   - foobar-api/service.yaml
   - foobar-api/statfulset.yaml
+  - foobar-api/tls.yaml
   - foobar-mtls/service.yaml
   - foobar-mtls/statfulset.yaml
-  - tls.yaml
+  - foobar-mtls/tls.yaml

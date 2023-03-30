@@ -48,3 +48,15 @@ metadata:
 spec:
   ca:
     secretName: raimon-ca
+---
+# Create a TLS Option for Traefik to validate raimon's certs when given
+apiVersion: traefik.containo.us/v1alpha1
+kind: TLSOption
+metadata:
+  name: raimon
+  namespace: kube-security
+spec:
+  clientAuth:
+    clientAuthType: VerifyClientCertIfGiven
+    secretNames:
+      - raimon-ca

@@ -37,7 +37,7 @@ spec:
           command: ["/bin/sh"]
           args:
             - -c
-            - "cp /ca/ca.crt /cache/ca.pem && cp /certs/tls.crt /cache/cert.pem && cp /certs/tls.key /cache/key.pem"
+            - "cp /client/ca.crt /cache/ca.pem && cp /server/tls.crt /cache/cert.pem && cp /server/tls.key /cache/key.pem"
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -50,11 +50,11 @@ spec:
                 - ALL
 
           volumeMounts:
-            - name: tls-ca
-              mountPath: /ca
+            - name: tls-server
+              mountPath: /server
               readOnly: true
-            - name: tls-certs
-              mountPath: /certs
+            - name: tls-client
+              mountPath: /client
               readOnly: true
             - name: tls-cache
               mountPath: /cache
@@ -101,12 +101,12 @@ spec:
               readOnly: true
 
       volumes:
-        - name: tls-ca
-          configMap:
-            name: raimon-ca
-        - name: tls-certs
+        - name: tls-server
           secret:
-            secretName: foobar-api-server
+            secretName: foobar-mtls-server
+        - name: tls-client
+          secret:
+            secretName: foobar-mtls-client
 
   volumeClaimTemplates:
     - apiVersion: v1
