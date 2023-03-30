@@ -30,6 +30,8 @@ Targets:
   tf-teardown-us  Destroy the GKE cluster (US)
   kube-init-eu    Get the Kubernetes contexts and put them in ~/.kube/foobar-eu  (EU)
   kube-init-us    Get the Kubernetes contexts and put them in ~/.kube/foobar-us (US)
+  get-client-cert Get the client certificate from the foobar namespace
+  get-mtls        Send an HTTP request to foobar using mtls
   help            Print this help message
 ```
 

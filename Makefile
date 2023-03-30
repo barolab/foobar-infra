@@ -83,6 +83,20 @@ kube-init-us:
 	export KUBECONFIG=~/.kube/foobar-us
 	@gcloud container clusters get-credentials foobar-us-east1 --region=us-east1 --project $(project)
 
+## Get the client certificate from the foobar namespace
+get-client-cert:
+	@kubectl get configmap raimon-ca -o jsonpath='{.data.ca\.crt}' > "${PWD}/certs/ca.crt"
+	@kubectl -n foobar get secret foobar-client-cert -o jsonpath='{.data.tls\.crt}' | base64 --decode > "${PWD}/certs/client.crt"
+	@kubectl -n foobar get secret foobar-client-cert -o jsonpath='{.data.tls\.key}' | base64 --decode > "${PWD}/certs/client.key"
+
+## Send an HTTP request to foobar using mtls
+get-mtls:
+	@curl \
+		--cacert "${PWD}/certs/ca.crt" \
+		--cert "${PWD}/certs/client.crt" \
+		--key "${PWD}/certs/client.key" \
+		-v https://api.raimon.dev/mtls
+
 ## Print this help message
 help:
 	@echo ''
