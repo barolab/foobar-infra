@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: flux-system
 resources:
+  - traefik-proxy/config.yaml
   - traefik-proxy/deployment.yaml
   - traefik-proxy/ingress-class.yaml
   - traefik-proxy/monitor.yaml

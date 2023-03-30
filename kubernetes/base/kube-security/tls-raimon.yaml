@@ -48,15 +48,3 @@ metadata:
 spec:
   ca:
     secretName: raimon-ca
----
-# Create a Traefik Proxy TLS option to do mTLS with our new CA
-apiVersion: traefik.containo.us/v1alpha1
-kind: TLSOption
-metadata:
-  name: raimon
-  namespace: kube-security
-spec:
-  clientAuth:
-    clientAuthType: VerifyClientCertIfGiven
-    secretNames:
-      - raimon-ca

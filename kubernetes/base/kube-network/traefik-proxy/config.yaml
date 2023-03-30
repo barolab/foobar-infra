@@ -1,0 +1,13 @@
+# Create a TLS option using the raimon CA
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-proxy
+  namespace: kube-network
+data:
+  mtls.toml: |
+    [tls.options]
+      [tls.options.default]
+        [tls.options.default.clientAuth]
+          clientAuthType = "VerifyClientCertIfGiven"
+          caFiles = ["/certs/ca.crt"]
