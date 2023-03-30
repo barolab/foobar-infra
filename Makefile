@@ -86,8 +86,8 @@ kube-init-us:
 ## Get the client certificate from the foobar namespace
 get-client-cert:
 	@kubectl get configmap raimon-ca -o jsonpath='{.data.ca\.crt}' > "${PWD}/certs/ca.crt"
-	@kubectl -n foobar get secret foobar-client-cert -o jsonpath='{.data.tls\.crt}' | base64 --decode > "${PWD}/certs/client.crt"
-	@kubectl -n foobar get secret foobar-client-cert -o jsonpath='{.data.tls\.key}' | base64 --decode > "${PWD}/certs/client.key"
+	@kubectl -n foobar get secret foobar-api-client -o jsonpath='{.data.tls\.crt}' | base64 --decode > "${PWD}/certs/client.crt"
+	@kubectl -n foobar get secret foobar-api-client -o jsonpath='{.data.tls\.key}' | base64 --decode > "${PWD}/certs/client.key"
 
 ## Send an HTTP request to foobar using mtls
 get-mtls:
