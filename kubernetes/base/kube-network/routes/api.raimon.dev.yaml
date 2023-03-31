@@ -43,6 +43,3 @@ spec:
 
   tls:
     secretName: tls-api-raimon-dev
-    options:
-      name: raimon
-      namespace: kube-security

@@ -70,3 +70,5 @@ spec:
   insecureSkipVerify: false
   rootCAsSecrets:
     - foobar-mtls-server
+  certificatesSecrets:
+    - foobar-mtls-client
