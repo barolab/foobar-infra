@@ -11,6 +11,11 @@ The purpose of this repository is to answer to a challenge that was given me: De
   - [The TLS certificate](#the-tls-certificate)
 - [Step 4 - Ingress Controller](#step-4---ingress-controller)
 - [Step 5 - DNS & TLS certificate](#step-5---dns--tls-certificates)
+- [Step 6 - Final Words](#step-6---final-words)
+  - [DNS Load Balancing](#dns-load-balancing)
+  - [Give it a name](#give-it-a-name)
+  - [Observability with Grafana Cloud](#observability-with-grafana-cloud)
+  - [TLS validation](#tls-validation--mtls)
 
 ## Introduction
 
@@ -155,7 +160,6 @@ Done ! We now have two GKE clusters in two different regions, next step will be 
 
 **Improvements**
 
-- [ ] Manage the GCP project ID a bit differently (en environment variable on a laptop is error-prone)
 - [ ] GitOps the Terraform modules, either with TF Cloud or Flux [terraform-controller](https://github.com/weaveworks/tf-controller)
 - [ ] Use a [GCP Service Account](https://developer.hashicorp.com/terraform/language/settings/backends/gcs#running-terraform-on-google-cloud) for Terraform
 - [ ] Check some [GCP Best Practices](https://www.whizlabs.com/blog/gcp-best-practices/)
@@ -231,7 +235,7 @@ That's it for the Flux installation step, next we will:
 **Improvements**
 
 - [ ] Use a GitHub Service Account to create the SSH deploy key
-- [ ] Find a better way than using an Environment Variable to pass the GitHub Token to Terraform
+- [ ] Find a better way than using an Environment Variable to pass the GitHub Token to Terraform (secret provider ?)
 
 ## Step 3 - Foobar API deployment
 
@@ -337,9 +341,9 @@ Then using Flux & Kustomize, we're only a couple of files away from deploying th
 **Improvements**
 
 - [x] A better release process for the Docker Image, based on GitHub releases rather than push to any branch ([PR#7](https://github.com/barolab/foobar-infra/pull/7))
-- [ ] Something to automate the Kubernetes Docker config deployment (SealedSecrets / External Secrets, Kyverno, etc...)
-- [ ] Docker image should _NOT_ run as root (and Kubernetes Security Context should be set accordingly)
-- [ ] Use a `StatefulSet` and change the InitContainer to get the certificate from a backend service (like Vault)
+- [ ] Alternative to automate the GHCR secret deployment (SealedSecrets / ExternalSecrets, Kyverno, etc...)
+- [x] Docker image should _NOT_ run as root (and Kubernetes Security Context should be set accordingly) (see [PR#26](https://github.com/barolab/foobar-infra/pull/26))
+- [x] Use a `StatefulSet` and change the InitContainer to get the certificate from a secret (see [PR#25](https://github.com/barolab/foobar-infra/pull/25))
 
 ## Step 4 - Ingress Controller
 
@@ -468,7 +472,7 @@ Skipping certificate validation is not ideal though, we'll have to try and use c
 
 **Improvements**
 
-- [ ] Use a private authority to sign certificates that will be valid for both `foobar-api` and `traefik-proxy` (and remove [this flag](https://github.com/barolab/foobar-infra/pull/11/files#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R71))
+- [x] Use a private authority to sign certificates that will be valid for both `foobar-api` and `traefik-proxy` (and remove [this flag](https://github.com/barolab/foobar-infra/pull/11/files#diff-73c5d75b064816d4bace7d59f84beb987877037693938175bdad68f68df6d636R71)) (see [PR#25](https://github.com/barolab/foobar-infra/pull/25)))
 
 ## Step 5 - DNS & TLS Certificates
 
@@ -619,7 +623,7 @@ Our Foobar API is now publicly available, with regional DNS resolution and a val
 
 - [ ] Health Check on DNS record, this will make us resilient to a region outage (it appears that this is not yet supported for public DNS zones on GCP).
 
-## Step 7 - Final Steps
+## Step 6 - Final Words
 
 ### DNS Load Balancing
 
@@ -628,6 +632,37 @@ I intended to use this in order to show network distribution by destroying the E
 Normally it should have fallback on US, but without health check it will just continue to fail until a manual action of removing EU from the DNS record is run.
 
 So change of plans, we're going to enable Weighted Round Robin at the DNS level instead of using Geo location records. This will allow us to show load balancing between EU & US (see [PR#15](https://github.com/barolab/foobar-infra/pull/15)).
+
+### Give it a name
+
+While reading the application source code, you can see it asks for a name:
+
+```go
+// app/main.go
+
+...
+
+func init() {
+	flag.StringVar(&port, "port", "80", "give me a port number")
+	flag.StringVar(&name, "name", os.Getenv("WHOAMI_NAME"), "give me a name")
+}
+```
+
+What a good idea ! Let's use the Kubernetes downward API to pass POD fields into an environment variable to that the name of the `foobar-api` container matches it's Kubernetes FQDN, eg. `POD_IP.POD_NAMESPACE.pod.cluster.local`!
+
+You can see how it's done [here](https://github.com/barolab/foobar-infra/blob/7236fe8c7f8308bcb72ecaa92a83ecd865b78fc5/kubernetes/base/foobar/foobar-api/statfulset.yaml#L56). There's two small things to note here:
+
+1. You need to use `$()` (and not `${}`) for environment variable substitution (see [the official documentation](https://kubernetes.io/docs/tasks/inject-data-application/define-interdependent-environment-variables/#define-an-environment-dependent-variable-for-a-container))
+2. The order is important ! The environments variables you depend upon needs to be declared first
+
+Once it's done, as mall curl will show us this:
+
+```sh
+$ curl https://api.raimon.dev/foobar
+Name: foobar-api-0.foobar.pod.cluster.local
+Hostname: foobar-api-0
+...
+```
 
 ### Observability with Grafana Cloud
 
@@ -638,6 +673,10 @@ Right after creating the account, you should be able to launch Grafana, click on
 This will open a guide on how to setup Grafana Cloud on Kubernetes. Inside the manifests you should find you Prometheus remote write URL and credentials, and the same for your Loki instance. Set the variables in your `.dotenv` like shown in the [setup doc](/docs/setud.md) and apply the Terraform modules to deploy them in the Flux variables `ConfigMap`.
 
 You should now start to see clusters in your Grafana Cloud account! For now there's nothing fancy, just the basic Kubernetes monitoring (enough to get started).
+
+**Improvements**
+
+- [ ] Keep the custom dashboards / Grafana settings in IaC. The [Terraform provider](https://registry.terraform.io/providers/grafana/grafana/latest) looks very good
 
 ### TLS validation & mTLS
 
@@ -652,6 +691,55 @@ My knowledge in mutual TLS is a bit light and so I wanted to dig a bit more to u
 
 The overall idea is to tell the client (like `curl`) to use a TLS key/pair to authenticate to the server. Both the server and the clients can accepts certificates distributed by our authority.
 
-In this scenario, my understanding is that the proxy (here Traefik), doesn't take part in the mutual TLS authentication between the client and the server. Thought it can filter any client certificates who are not signed by the given authority.
+From my understanding Traefik can act as both the server and the client:
 
-This definitely got harder than expected (see [PR#25](https://github.com/barolab/foobar-infra/pull/25)) even though I was able to remove [this security flaw](https://github.com/barolab/foobar-infra/blob/5c2abbc71d208c9ff73dcf0b93c798880174bb52/kubernetes/base/kube-network/traefik-proxy/deployment.yaml#L72) from the Traefik configuration along the way.
+1. Traefik act as the client, and does the authentication to the downstream server. We need to give it a valid client certificate and the authority(ies) used to issue all of this. The end client (us) don't have to send a client certificate.
+2. Traefik act as the server, so the end client (us) must send the client certificate. We can instruct Traefik to perform a validation using the [TLS Option](https://doc.traefik.io/traefik/https/tls/#client-authentication-mtls). This will ensure only valid clients (from the perspective of Traefik) will reach the downstream.
+
+I implemented n°1 using the following manifests:
+
+1. [Enabling mTLS on the Foobar API by giving it the CA file](https://github.com/barolab/foobar-infra/blob/7236fe8c7f8308bcb72ecaa92a83ecd865b78fc5/kubernetes/base/foobar/foobar-mtls/statfulset.yaml#L40)
+2. [Creating a client certificate issued by a known authority (the self-signed one used also for the server certificate)](https://github.com/barolab/foobar-infra/blob/7236fe8c7f8308bcb72ecaa92a83ecd865b78fc5/kubernetes/base/foobar/foobar-mtls/tls.yaml#L35)
+3. [Create a ServersTransport to use the client certificate](https://github.com/barolab/foobar-infra/blob/main/kubernetes/base/foobar/foobar-mtls/tls.yaml#L66)
+4. [Add a path /mtls in the IngressRoute where we instruct Traefik to use the ServersTransport above](https://github.com/barolab/foobar-infra/blob/7236fe8c7f8308bcb72ecaa92a83ecd865b78fc5/kubernetes/base/kube-network/routes/api.raimon.dev.yaml#L34)
+
+And we can see curl works !
+
+```
+$ curl https://api.raimon.dev/mtls
+Name: foobar-mtls-0.foobar.svc.cluster.local
+Hostname: foobar-mtls-0
+IP: 127.0.0.1
+IP: 192.168.3.9
+RemoteAddr: 192.168.3.4:33766
+GET /mtls HTTP/1.1
+Host: api.raimon.dev
+User-Agent: curl/7.81.0
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: 192.168.3.1
+X-Forwarded-Host: api.raimon.dev
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: traefik-proxy-d9dc56f6d-qfvr2
+X-Real-Ip: 192.168.3.1
+```
+
+And if we try to remove the Client certificate (eg. `certificatesSecrets`):
+
+```sh
+$ curl https://api.raimon.dev/mtls
+Bad Gateway%
+
+# With the Traefik access logs telling the 502 comes from the downstream
+# {
+#   "DownstreamContentSize": 11,
+#   "DownstreamStatus": 502,
+#   "OriginDuration": 7732850,
+#   "OriginStatus": 502,
+#   ...
+#   "ServiceAddr": "192.168.3.6:80",
+#   "ServiceName": "kube-network-api-raimon-dev-d946955a7f71e3338fec@kubernetescrd",
+#   "TLSVersion": "1.3"
+# }
+```
