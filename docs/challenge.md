@@ -643,8 +643,8 @@ While reading the application source code, you can see it asks for a name:
 ...
 
 func init() {
-	flag.StringVar(&port, "port", "80", "give me a port number")
-	flag.StringVar(&name, "name", os.Getenv("WHOAMI_NAME"), "give me a name")
+  flag.StringVar(&port, "port", "80", "give me a port number")
+  flag.StringVar(&name, "name", os.Getenv("WHOAMI_NAME"), "give me a name")
 }
 ```
 
@@ -705,7 +705,7 @@ I implemented n°1 using the following manifests:
 
 And we can see curl works !
 
-```
+```sh
 $ curl https://api.raimon.dev/mtls
 Name: foobar-mtls-0.foobar.svc.cluster.local
 Hostname: foobar-mtls-0
