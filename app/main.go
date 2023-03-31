@@ -66,8 +66,11 @@ func main() {
 	}
 
 	// If a CA is present, load it
-	if _, err := os.Stat("/cert/ca.pem"); err != nil {
+	if _, err := os.Stat("/cert/ca.pem"); err == nil {
+		fmt.Println("Loading CA Certificate")
 		server.TLSConfig = setupMutualTLS("/cert/ca.pem")
+	} else {
+		fmt.Println("Running without a CA Certificate")
 	}
 
 	_, err := os.Stat("/cert/cert.pem")
