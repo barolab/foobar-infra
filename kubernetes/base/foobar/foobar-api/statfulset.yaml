@@ -65,7 +65,7 @@ spec:
                   fieldPath: metadata.namespace
 
             - name: WHOAMI_NAME
-              value: "$(POD_NAME).$(POD_NAMESPACE).svc.cluster.local"
+              value: "$(POD_NAME).$(POD_NAMESPACE).pod.cluster.local"
 
           resources:
             requests:
