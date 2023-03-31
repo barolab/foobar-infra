@@ -47,7 +47,7 @@ spec:
 
       containers:
         - name: foobar-api
-          image: ghcr.io/barolab/foobar-api:0.1.2
+          image: ghcr.io/barolab/foobar-api:0.1.3
           ports:
             - name: https
               protocol: TCP
